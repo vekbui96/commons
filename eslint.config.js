@@ -7,19 +7,12 @@ import reactRefresh from "eslint-plugin-react-refresh";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist", "**/coverage", "**/node_modules", "**/data", ".claude/worktrees"],
+    ignores: ["dist", "coverage", "node_modules", ".claude/worktrees"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.{ts,tsx}"],
-    rules: {
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
-    },
-  },
-  {
-    files: ["web/src/**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.browser },
@@ -31,10 +24,12 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
     },
   },
   {
-    files: ["server/**/*.ts", "**/*.config.{ts,js}", "eslint.config.js"],
+    files: ["*.config.{ts,js}"],
     languageOptions: {
       globals: { ...globals.node },
     },

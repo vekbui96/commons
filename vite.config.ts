@@ -2,8 +2,8 @@
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 
-// The future API server (server/, default port 8790). In dev, /api/* is proxied
-// there so the browser talks to one origin.
+// The Commons API (vekbui96/commons-api, default port 8790). Dev convenience
+// only: production calls go through src/api/client.ts with VITE_COMMONS_API.
 const API_TARGET = process.env.VITE_SERVER_TARGET ?? "http://localhost:8790";
 
 export default defineConfig(({ command, isPreview }) => ({
