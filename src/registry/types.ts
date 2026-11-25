@@ -12,9 +12,10 @@ import type { AppTint } from "@/ui/tints";
 export type AppKind = "internal" | "external";
 
 /**
- * `public`: listed on the homepage for everyone.
- * `private`: hidden until the backend has auth; the registry keeps it but the
- * homepage does not list it.
+ * `public`: in both builds, listed for everyone.
+ * `private`: only in the private, tailnet-only build. The public build cuts it
+ * out of the bundle (build/target.ts reads this field from the source, so keep
+ * it a plain string literal).
  */
 export type AppVisibility = "public" | "private";
 

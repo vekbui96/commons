@@ -19,6 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:app": "node scripts/check-app.mjs",
+    "check:dist": "node scripts/check-dist.mjs",
+    "deploy:private": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-private.ps1",
     "verify": "npm run format:check && npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {

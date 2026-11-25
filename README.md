@@ -6,6 +6,28 @@ elsewhere.
 
 Live: https://vekbui96.github.io/commons/
 
+## Two builds, one repo
+
+| Build                | Where                                                                     | Apps                                              | API                                                     |
+| -------------------- | ------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| **Public** (default) | GitHub Pages, `/commons/`                                                 | `visibility: "public"` only; private ones cut out | `VITE_COMMONS_API` (unset for now: no backend features) |
+| **Private**          | server-pc, `D:\services\commons-web\` served by `tailscale serve` on 8445 | all                                               | same origin, `/api/...`                                 |
+
+`COMMONS_TARGET=public|private` picks the build (`build/target.ts`). The private
+site is **tailnet only, never Funnel**; Ve opens it on a device with Tailscale on.
+App code stays public on GitHub either way; data stays on server-pc.
+
+How private apps stay off Pages: `src/registry/registry.ts` discovers apps with
+`import.meta.glob`, and each glob carries a placeholder negative pattern. For the
+public target, a small Vite plugin (`excludePrivateApps` in `build/target.ts`)
+reads each `src/apps/*/manifest.ts`, and swaps the placeholder for
+`!../apps/<id>/**` for every app that is not plainly `visibility: "public"`
+(unknown counts as private). Vite never loads those files, so no manifest,
+component or chunk of theirs is emitted. `node scripts/check-dist.mjs public`
+then searches `dist/` for each private app's id, folder path and name, and fails
+on any hit; CI and the Pages deploy run it. (`... private` checks the reverse.)
+Tests always see every app, so every manifest is still validated.
+
 Commons is two repos, like the portfolio:
 
 | Repo                                                                 | What                                                                                       |
@@ -30,6 +52,9 @@ commons/
 │  ├─ api/client.ts      the only module that calls the Commons API
 │  ├─ ui/                shared component kit (AppShell, Button, Input, ...)
 │  └─ styles/            tokens.css, tokens-fonts.css, fonts/, base.css
+├─ src/site.ts           which build this is (public / private), from COMMONS_TARGET
+├─ build/target.ts       the build switch and the private-app exclusion plugin
+├─ scripts/check-dist.mjs, scripts/deploy-private.ps1
 ├─ docs/api-contract.md, docs/templates/app-CLAUDE.md
 ├─ eslint/app-boundaries.js   the wall between apps (lint rule)
 ├─ scripts/check-app.mjs      npm run check:app -- <id>
@@ -40,12 +65,16 @@ commons/
   at build time, so the homepage needs no edits when an app is added.
 - `kind` is `internal` (a route inside Commons, code-split and lazy-loaded) or
   `external` (a link out, opened in a new tab).
-- `visibility` is `public` or `private`; private apps stay off the homepage
-  until the API has auth.
+- `visibility` is `public` or `private`; private apps exist only in the private
+  build (see above). Write it as a plain literal: the build reads it.
 - Routing is hash-based (`#/apps/units`) so deep links work on Pages without a
   server fallback.
-- API calls go through `src/api/client.ts`, with the base URL from
-  `VITE_COMMONS_API`. It is unset for now, which means no backend features.
+- API calls go through `src/api/client.ts`: same origin on the private build,
+  `VITE_COMMONS_API` on the public one (unset for now). `checkReachable()` /
+  `useApi()` ask `/api/health` with a short timeout (cached), and `<NeedsApi>`
+  shows a quiet "Connect to Tailscale to use this" when the API cannot be
+  reached. Writes go through `sendJson`, which sends the CSRF token from
+  `/api/session` in `X-Commons-Token`.
 
 ## Rule: mobile first, and it must look good on Windows
 
@@ -95,9 +124,17 @@ npm install
 npm run dev       # http://localhost:5180 (proxies /api to a local Commons API on 8790)
 npm run check:app -- <id>  # one app's lint + tests while working
 npm run verify    # format check, typecheck, lint, tests (what CI runs)
-npm run build     # production build into dist/ (base /commons/)
+npm run build     # public production build into dist/ (base /commons/)
 npm run preview   # serve dist/ at http://localhost:4173/commons/
+npm run check:dist -- public   # no private app in dist/
+
+$env:COMMONS_TARGET = "private"; npm run build   # private build (base /), then:
+Remove-Item Env:COMMONS_TARGET
+npm run deploy:private   # build private + publish to D:\services\commons-web\ (server-pc only)
 ```
+
+`COMMONS_TARGET=private npm run dev` shows the private site locally (all apps,
+the "Private" mark), with `/api` proxied to a local Commons API on 8790.
 
 Use PowerShell, not Git Bash, for builds: MSYS rewrites path-like env values
 such as `VITE_BASE=/commons/` and breaks every asset.
@@ -152,6 +189,14 @@ PowerShell and CI. CI always runs the full `verify`.
 
 ## Deploy
 
-Pushing to `main` runs `deploy-pages.yml`, which verifies, builds and publishes
-`dist/` to Pages. To redeploy by hand:
-`gh workflow run deploy-pages.yml --repo vekbui96/commons`.
+**Public (Pages):** pushing to `main` runs `deploy-pages.yml`, which verifies,
+builds the public target, checks `dist/` has no private app, and publishes it.
+To redeploy by hand: `gh workflow run deploy-pages.yml --repo vekbui96/commons`.
+
+**Private (server-pc):** from PowerShell on server-pc, `npm run deploy:private`
+(`scripts/deploy-private.ps1`). It builds with `COMMONS_TARGET=private`, checks
+`dist/` holds the private apps and loads assets from `/`, then mirrors `dist/`
+into `D:\services\commons-web\`, replacing that folder's contents only. Never
+from Git Bash. It does not touch `tailscale serve`: the Commons API side owns the
+8445 handlers (`/` static from that folder, `/api` to `127.0.0.1:8790`).
+**The private site is tailnet only. Never put it behind Funnel.**

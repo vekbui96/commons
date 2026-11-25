@@ -1,0 +1,28 @@
+/* Private check: layout only, tokens only. */
+
+.private-check {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.private-check__note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.private-check__facts {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, max-content) 1fr;
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.private-check__facts dt {
+  color: var(--text-muted);
+}
+
+.private-check__facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

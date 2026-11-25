@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { appPath, listedApps, type RegisteredApp } from "@/registry/registry";
-import { Input, ListRow, ThemeToggle } from "@/ui";
+import { Input, ListRow, SiteMark, ThemeToggle } from "@/ui";
 import "./home.css";
 
 const EDITABLE = "input, textarea, select, [contenteditable]:not([contenteditable='false'])";
@@ -32,6 +32,7 @@ export function Home({ apps = listedApps() }: { apps?: RegisteredApp[] }) {
   return (
     <div className="home">
       <header className="home__intro">
+        <SiteMark />
         <h1 className="home__wordmark">Commons</h1>
         <p className="home__lede">Small apps and utilities, made as they are needed.</p>
       </header>

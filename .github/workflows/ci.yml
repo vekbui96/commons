@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -23,5 +23,11 @@ jobs:
       - run: npm ci
       - name: Verify (format, typecheck, lint, test)
         run: npm run verify
-      - name: Build
+      - name: Build (private target) and check it has the private apps
+        run: npm run build && node scripts/check-dist.mjs private
+        env:
+          COMMONS_TARGET: private
+      - name: Build (public target)
         run: npm run build
+      - name: Check no private app reached the public build
+        run: node scripts/check-dist.mjs public

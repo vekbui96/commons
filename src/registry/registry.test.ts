@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { findInternalApp, listedApps, registry } from "./registry";
+import { findInternalApp, listedApps, registry, type RegisteredApp } from "./registry";
 import { duplicateIds, validateManifest } from "./validate";
 
 describe("app registry", () => {
@@ -49,24 +49,39 @@ describe("app registry", () => {
     expect(findInternalApp("nope")).toBeUndefined();
   });
 
-  it("hides private apps from the homepage", () => {
-    const fake = [
-      ...registry,
-      {
-        folder: "secret",
-        load: undefined,
-        manifest: {
-          id: "secret",
-          name: "Secret",
-          description: "Hidden.",
-          icon: "S",
-          kind: "external" as const,
-          url: "https://example.com/",
-          visibility: "private" as const,
-        },
-      },
-    ];
-    expect(listedApps(fake).map((a) => a.manifest.id)).not.toContain("secret");
+  // build/target.ts decides what the public build may contain by reading each
+  // manifest's source, so visibility must be a plain literal that matches.
+  it.each(registry.map((app) => [app.folder, app] as const))(
+    "apps/%s declares visibility as a literal (the build switch reads it)",
+    (folder, app) => {
+      const source = readFileSync(join(process.cwd(), "src", "apps", folder, "manifest.ts"), "utf8");
+      expect(source).toMatch(new RegExp(String.raw`\bvisibility\s*:\s*["']${app.manifest.visibility}["']`));
+    },
+  );
+
+  const secret: RegisteredApp = {
+    folder: "secret",
+    load: () => Promise.resolve({ default: () => null }),
+    manifest: {
+      id: "secret",
+      name: "Secret",
+      description: "Hidden.",
+      icon: "S",
+      kind: "internal",
+      visibility: "private",
+    },
+  };
+  const withSecret = [...registry, secret];
+
+  it("keeps private apps off the public site", () => {
+    expect(listedApps(withSecret, "public").map((a) => a.manifest.id)).not.toContain("secret");
+    expect(findInternalApp("secret", withSecret, "public")).toBeUndefined();
+  });
+
+  it("lists and opens private apps on the private site", () => {
+    expect(listedApps(withSecret, "private").map((a) => a.manifest.id)).toContain("secret");
+    expect(findInternalApp("secret", withSecret, "private")).toBe(secret);
+    expect(listedApps(withSecret, "private")).toHaveLength(withSecret.length);
   });
 });
 

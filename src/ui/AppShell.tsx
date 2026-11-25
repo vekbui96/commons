@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cx } from "./cx";
+import { SiteMark } from "./SiteMark";
 
 export interface AppShellProps {
   /** The app name, shown in the top bar as the page's h1. */
@@ -44,6 +45,7 @@ export function AppShell({ title, description, wide = false, children }: AppShel
             <span aria-hidden="true">←</span> Commons
           </Link>
           <h1 className="ui-topbar__title">{title}</h1>
+          <SiteMark />
         </div>
       </header>
       <main className={cx("ui-column", wide && "is-wide")}>

@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { SITE_TARGET, type SiteTarget } from "@/site";
 import type { AppManifest } from "./types";
 
 /**
@@ -10,10 +11,17 @@ import type { AppManifest } from "./types";
 type ComponentModule = { default: ComponentType };
 type ComponentLoader = () => Promise<ComponentModule>;
 
-const manifestModules = import.meta.glob<{ default: AppManifest }>("../apps/*/manifest.ts", {
-  eager: true,
-});
-const componentLoaders = import.meta.glob<ComponentModule>("../apps/*/App.tsx");
+// The "!../apps/__private_apps_excluded__/**" pattern is a placeholder: for the
+// public build, build/target.ts swaps it for one negative pattern per private
+// app folder, so private apps never enter the public bundle. Keep it in both globs.
+const manifestModules = import.meta.glob<{ default: AppManifest }>(
+  ["../apps/*/manifest.ts", "!../apps/__private_apps_excluded__/**"],
+  { eager: true },
+);
+const componentLoaders = import.meta.glob<ComponentModule>([
+  "../apps/*/App.tsx",
+  "!../apps/__private_apps_excluded__/**",
+]);
 
 export interface RegisteredApp {
   /** Folder name under src/apps/. */
@@ -39,18 +47,33 @@ export const registry: readonly RegisteredApp[] = Object.entries(manifestModules
   })
   .sort((a, b) => a.manifest.name.localeCompare(b.manifest.name));
 
-/** Apps shown on the homepage. Private apps stay hidden until there is auth. */
-export function listedApps(apps: readonly RegisteredApp[] = registry): RegisteredApp[] {
-  return apps.filter((app) => app.manifest.visibility === "public");
+/**
+ * Whether an app belongs on this site. The public site shows only public apps
+ * (its bundle has no others anyway); the private, tailnet-only site shows all.
+ */
+export function isAvailable(app: RegisteredApp, target: SiteTarget = SITE_TARGET): boolean {
+  return target === "private" || app.manifest.visibility === "public";
 }
 
-/** An internal, public app by id, or undefined. */
-export function findInternalApp(id: string, apps: readonly RegisteredApp[] = registry) {
+/** Apps shown on this site's homepage. */
+export function listedApps(
+  apps: readonly RegisteredApp[] = registry,
+  target: SiteTarget = SITE_TARGET,
+): RegisteredApp[] {
+  return apps.filter((app) => isAvailable(app, target));
+}
+
+/** An internal app available on this site, by id, or undefined. */
+export function findInternalApp(
+  id: string,
+  apps: readonly RegisteredApp[] = registry,
+  target: SiteTarget = SITE_TARGET,
+) {
   return apps.find(
     (app) =>
       app.manifest.id === id &&
       app.manifest.kind === "internal" &&
-      app.manifest.visibility === "public" &&
+      isAvailable(app, target) &&
       app.load !== undefined,
   );
 }

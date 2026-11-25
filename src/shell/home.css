@@ -11,6 +11,11 @@
   flex-direction: column;
 }
 
+.home__intro .ui-site-mark {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+}
+
 .home__wordmark {
   font-size: var(--text-display);
   line-height: 1;

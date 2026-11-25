@@ -1,10 +1,14 @@
-﻿import { StrictMode } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { AppRoutes } from "./shell/AppRoutes";
+import { isPrivateSite } from "./site";
 import "./styles/tokens-fonts.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
+
+// The private (tailnet-only) build says so in the tab title too.
+if (isPrivateSite()) document.title = "Commons (private)";
 
 // Hash routing so deep links (#/apps/units) work on GitHub Pages without a
 // server-side fallback.

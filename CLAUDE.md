@@ -1,9 +1,17 @@
 # CLAUDE.md
 
-Commons Front End: a personal home for Ve's small apps and utilities, on GitHub
-Pages (https://vekbui96.github.io/commons/). The backend is a separate repo,
-**Commons API** (`vekbui96/commons-api`, `D:\projects\commons-api`), not
-deployed yet.
+Commons Front End: a personal home for Ve's small apps and utilities. The backend
+is a separate repo, **Commons API** (`vekbui96/commons-api`,
+`D:\projects\commons-api`).
+
+**One repo, two builds** (`COMMONS_TARGET`, see `build/target.ts`):
+
+- **Public** (default): GitHub Pages, https://vekbui96.github.io/commons/, base
+  `/commons/`. Only `visibility: "public"` apps; private apps are cut out of the
+  bundle, not just hidden.
+- **Private**: every app, base `/`, the API on the same origin under `/api`.
+  Served from `D:\services\commons-web\` on server-pc by `tailscale serve` on
+  port 8445, **tailnet only, never Funnel**.
 
 This file is a short index plus the rules every app shares. **App-specific
 detail never goes here.** It goes in that app's own CLAUDE.md.
@@ -32,15 +40,26 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   published runtime embed (a web component at a versioned URL such as
   `embed/v1.js`, loaded live). That embed does not exist yet; the rule stands
   anyway. ESLint enforces it (`commons/app-boundaries`, `eslint/app-boundaries.js`).
-- **All API calls go through `src/api/client.ts`**, base URL from
-  `VITE_COMMONS_API`. Unset means no backend: check `hasApi()` and hide backend
-  features. No `fetch` to the API anywhere else.
+- **All API calls go through `src/api/client.ts`**. Private build: same origin
+  (`/api/...`). Public build: `VITE_COMMONS_API`, unset (no backend, `hasApi()`
+  false) until Ve asks for optional private features there. No `fetch` to the API
+  anywhere else. Writes use `sendJson` (CSRF token from `/api/session`).
+- **Reachable is not configured.** The API answers only on the tailnet. Wrap API
+  features in `<NeedsApi>` (or `useApi()`: `checking | reachable | unreachable`);
+  unreachable shows a quiet "Connect to Tailscale to use this", never an error.
 - **Contract changes go in both repos.** Edit `docs/api-contract.md` here and in
   `D:\projects\commons-api\docs\api-contract.md` together.
 - **This page is public.** No tailnet hostnames (`*.ts.net`), the ops dashboard,
   LAN addresses or secrets anywhere in `src/`. A registry test enforces the host
   rule. `VITE_` values end up in the public bundle.
-- `private` apps stay hidden until the API has auth.
+- **`visibility: "private"` apps exist only in the private build.** Write it as a
+  plain literal in the manifest (the build reads it; a test checks). The public
+  build swaps the registry glob's placeholder for negative patterns, so no private
+  manifest, component or chunk reaches Pages; `node scripts/check-dist.mjs public`
+  (CI and the Pages deploy run it) fails if a private id or name is in `dist/`.
+  App code is still public on GitHub: data stays on server-pc, never in source.
+- The private site shows a "Private" mark (`SiteMark`, in the top bar and on the
+  homepage). Keep it.
 - **Mobile first; must look good on Windows.** This is a rule, not a
   suggestion. Every UI change is checked at 390px and at 1440px with
   Windows-style 125% scaling (Playwright `deviceScaleFactor: 1.25`), in both
@@ -77,7 +96,12 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
 
 ## Deploy
 
-- Push to `main` (or `gh workflow run deploy-pages.yml --repo vekbui96/commons`).
+- **Public:** push to `main` (or `gh workflow run deploy-pages.yml --repo vekbui96/commons`).
+- **Private:** `npm run deploy:private` from PowerShell on server-pc
+  (`scripts/deploy-private.ps1`): builds with `COMMONS_TARGET=private`, checks
+  dist, mirrors it into `D:\services\commons-web\` (that folder only). It never
+  touches `tailscale serve`; commons-api owns the 8445 handlers (`/` static,
+  `/api` -> 127.0.0.1:8790). **Private = tailnet only, never Funnel.**
 - **A blank SPA returns 200.** After a deploy, load the page in a browser at phone
   and desktop widths and look at it.
 - Every GitHub comment an agent posts as vekbui96 starts with `<!-- claude-agent -->`
