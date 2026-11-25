@@ -1,0 +1,54 @@
+/*
+ * Design tokens. Restyling Commons should mean editing this file only:
+ * components read colours, type and spacing from these variables.
+ */
+:root {
+  color-scheme: light;
+
+  /* Colour: warm paper, near-black ink, one rust accent. */
+  --bg: #f4f2ed;
+  --surface: #fbfaf7;
+  --ink: #1d1c1a;
+  --ink-muted: #67635b;
+  --rule: #dfdbd2;
+  --rule-strong: #c9c4b9;
+  --accent: #9a4a24;
+  --accent-soft: #efe2d8;
+  --focus: #9a4a24;
+
+  /* Type */
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+
+  /* Space and shape */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --radius: 6px;
+  --gutter: 1rem;
+  --measure: 40rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg: #161513;
+    --surface: #1e1d1a;
+    --ink: #ebe7df;
+    --ink-muted: #9e988c;
+    --rule: #2f2d29;
+    --rule-strong: #45423c;
+    --accent: #e0915f;
+    --accent-soft: #3a2a20;
+    --focus: #e0915f;
+  }
+}

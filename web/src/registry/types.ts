@@ -1,0 +1,46 @@
+/**
+ * An app's manifest: the only thing the homepage needs to know about it.
+ *
+ * Each app lives in `src/apps/<id>/` with a `manifest.ts` default-exporting one
+ * of these (via `defineApp`). Internal apps also have an `App.tsx` default-
+ * exporting a component, which is lazy-loaded at `#/apps/<id>`.
+ */
+
+/** `internal`: a route inside Commons. `external`: a link to a site elsewhere. */
+export type AppKind = "internal" | "external";
+
+/**
+ * `public`: listed on the homepage for everyone.
+ * `private`: hidden until the backend has auth; the registry keeps it but the
+ * homepage does not list it.
+ */
+export type AppVisibility = "public" | "private";
+
+interface ManifestBase {
+  /** Kebab-case, unique, and equal to the app's folder name. */
+  id: string;
+  /** Short display name. */
+  name: string;
+  /** One line, shown under the name. */
+  description: string;
+  /** One or two characters (a letter or a symbol), shown in the tile's mark. */
+  icon: string;
+  visibility: AppVisibility;
+}
+
+export interface InternalAppManifest extends ManifestBase {
+  kind: "internal";
+}
+
+export interface ExternalAppManifest extends ManifestBase {
+  kind: "external";
+  /** Absolute https URL. */
+  url: string;
+}
+
+export type AppManifest = InternalAppManifest | ExternalAppManifest;
+
+/** Identity helper so manifests are type-checked where they are written. */
+export function defineApp<T extends AppManifest>(manifest: T): T {
+  return manifest;
+}
