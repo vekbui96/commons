@@ -1,54 +1,255 @@
 /*
- * Design tokens. Restyling Commons should mean editing this file only:
- * components read colours, type and spacing from these variables.
+ * Design tokens: the one place Commons defines colour, type, space and shape.
+ *
+ * Three layers:
+ *   1. Primitives: raw palette, font stacks, type scale, spacing, radii, shadows.
+ *   2. Semantic roles (light): --bg, --text, --accent ... built from primitives.
+ *   3. Dark mode: redefines the roles only, never the primitives.
+ *
+ * Components and apps use ONLY the semantic roles and the scale tokens
+ * (--space-*, --text-*, --radius-*, --font-*). A test (src/styles/guard.test.ts)
+ * fails on any colour literal or font name outside src/styles/tokens*.css, and
+ * src/styles/tokens.test.ts checks WCAG contrast for the key role pairs.
+ *
+ * Theme: follows prefers-color-scheme; <html data-theme="light|dark"> (set by
+ * src/ui/theme.ts) forces one. The two dark blocks below must stay identical.
  */
+
+/* ---------- 1. Primitives ---------- */
 :root {
-  color-scheme: light;
+  /* Paper (warm neutrals, light) */
+  --paper-0: #ffffff;
+  --paper-50: #fbfaf7;
+  --paper-100: #f4f2ec;
+  --paper-200: #ece9e1;
+  --paper-300: #d9d6cc;
+  --paper-500: #7d7a71;
+  --paper-700: #5f625f;
+  --paper-900: #1b1d21;
 
-  /* Colour: warm paper, near-black ink, one rust accent. */
-  --bg: #f4f2ed;
-  --surface: #fbfaf7;
-  --ink: #1d1c1a;
-  --ink-muted: #67635b;
-  --rule: #dfdbd2;
-  --rule-strong: #c9c4b9;
-  --accent: #9a4a24;
-  --accent-soft: #efe2d8;
-  --focus: #9a4a24;
+  /* Night (cool-neutral greys, dark) */
+  --night-950: #0f1420;
+  --night-900: #14161a;
+  --night-850: #1c1f24;
+  --night-800: #252930;
+  --night-700: #30343a;
+  --night-500: #767b84;
+  --night-300: #a3a6a8;
+  --night-100: #e9e7e1;
 
-  /* Type */
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  /* Cobalt: the one accent */
+  --cobalt-900: #173e98;
+  --cobalt-700: #1f4fbf;
+  --cobalt-100: #e3e9f7;
+  --cobalt-300: #7ea3ff;
+  --cobalt-200: #a3bdff;
+  --cobalt-dim: #1f2a44;
+
+  /* Status */
+  --green-700: #2a6f42;
+  --green-100: #e3eee5;
+  --green-300: #6cc28a;
+  --green-dim: #1b2b21;
+  --amber-700: #8a5800;
+  --amber-100: #f5ebd7;
+  --amber-300: #e0a84a;
+  --amber-dim: #2e2616;
+  --red-900: #8f1e18;
+  --red-700: #b3261e;
+  --red-100: #f8e4e1;
+  --red-300: #ff8a80;
+  --red-200: #ffb0a8;
+  --red-dim: #35201f;
+
+  /* App icon tints (blue family + neutrals). Only .ui-mark uses these. */
+  --indigo-700: #3f45a8;
+  --indigo-100: #e6e6f5;
+  --indigo-300: #aeb2ff;
+  --indigo-dim: #262848;
+  --steel-700: #2f5672;
+  --steel-100: #e1e8ee;
+  --steel-300: #9cc0d8;
+  --steel-dim: #1e2b34;
+  --slate-700: #3d434c;
+  --slate-100: #e6e7ea;
+  --slate-300: #c4c8cf;
+  --slate-dim: #272a30;
+  --stone-700: #5a5549;
+  --stone-100: #ebe8e0;
+  --stone-300: #cfc9bc;
+  --stone-dim: #2a2824;
+
+  /* Fonts (faces in tokens-fonts.css). Fallbacks are metric-matched. */
+  --font-sans:
+    "Source Sans 3", "Source Sans 3 Fallback Win", "Source Sans 3 Fallback Apple", "Segoe UI", -apple-system,
+    system-ui, sans-serif;
+  --font-display:
+    "Newsreader", "Newsreader Fallback Win", "Newsreader Fallback Apple", Georgia, "Times New Roman", serif;
+  --font-mono:
+    "JetBrains Mono", "JetBrains Mono Fallback Win", "JetBrains Mono Fallback Apple", ui-monospace,
+    "Cascadia Mono", Consolas, monospace;
+
+  /* Type scale (rem, so it follows browser and OS scaling). Body >= 16px. */
   --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-base: 1.0625rem;
+  --text-md: 1.1875rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+  --text-display: clamp(2.75rem, 12vw, 4.5rem);
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --leading-tight: 1.15;
+  --leading-body: 1.5;
 
-  /* Space and shape */
+  /* Space */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-12: 3rem;
-  --radius: 6px;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* Shape and size */
+  --radius-sm: 0.25rem;
+  --radius: 0.375rem;
+  --radius-lg: 0.625rem;
+  --radius-full: 999px;
+  --hairline: 1px;
+  --tap: 2.75rem; /* 44px minimum tap target */
   --gutter: 1rem;
-  --measure: 40rem;
+  --column: 42.5rem; /* ~680px */
+  --column-wide: 68.75rem; /* ~1100px */
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --duration: 150ms;
+
+  /* Shadow primitives */
+  --shadow-paper: 0 1px 2px rgb(27 29 33 / 0.06), 0 8px 24px rgb(27 29 33 / 0.1);
+  --shadow-night: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.45);
 }
 
+/* ---------- 2. Semantic roles: light ---------- */
+:root {
+  color-scheme: light;
+
+  --bg: var(--paper-100);
+  --surface: var(--paper-50);
+  --surface-2: var(--paper-200);
+  --text: var(--paper-900);
+  --text-muted: var(--paper-700);
+  --line: var(--paper-300);
+  --line-strong: var(--paper-500); /* control borders: 3:1 against bg and surfaces */
+  --accent: var(--cobalt-700);
+  --accent-hover: var(--cobalt-900);
+  --accent-soft: var(--cobalt-100);
+  --on-accent: var(--paper-0);
+  --focus: var(--cobalt-700);
+  --ok: var(--green-700);
+  --ok-bg: var(--green-100);
+  --warn: var(--amber-700);
+  --warn-bg: var(--amber-100);
+  --danger: var(--red-700);
+  --danger-hover: var(--red-900);
+  --danger-bg: var(--red-100);
+  --on-danger: var(--paper-0);
+  --scrollbar-thumb: var(--paper-500);
+  --shadow-raised: var(--shadow-paper);
+
+  --tint-cobalt-bg: var(--cobalt-100);
+  --tint-cobalt-fg: var(--cobalt-700);
+  --tint-indigo-bg: var(--indigo-100);
+  --tint-indigo-fg: var(--indigo-700);
+  --tint-steel-bg: var(--steel-100);
+  --tint-steel-fg: var(--steel-700);
+  --tint-slate-bg: var(--slate-100);
+  --tint-slate-fg: var(--slate-700);
+  --tint-stone-bg: var(--stone-100);
+  --tint-stone-fg: var(--stone-700);
+}
+
+/* ---------- 3. Semantic roles: dark (forced) ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: var(--night-900);
+  --surface: var(--night-850);
+  --surface-2: var(--night-800);
+  --text: var(--night-100);
+  --text-muted: var(--night-300);
+  --line: var(--night-700);
+  --line-strong: var(--night-500);
+  --accent: var(--cobalt-300);
+  --accent-hover: var(--cobalt-200);
+  --accent-soft: var(--cobalt-dim);
+  --on-accent: var(--night-950);
+  --focus: var(--cobalt-300);
+  --ok: var(--green-300);
+  --ok-bg: var(--green-dim);
+  --warn: var(--amber-300);
+  --warn-bg: var(--amber-dim);
+  --danger: var(--red-300);
+  --danger-hover: var(--red-200);
+  --danger-bg: var(--red-dim);
+  --on-danger: var(--night-950);
+  --scrollbar-thumb: var(--night-500);
+  --shadow-raised: var(--shadow-night);
+
+  --tint-cobalt-bg: var(--cobalt-dim);
+  --tint-cobalt-fg: var(--cobalt-200);
+  --tint-indigo-bg: var(--indigo-dim);
+  --tint-indigo-fg: var(--indigo-300);
+  --tint-steel-bg: var(--steel-dim);
+  --tint-steel-fg: var(--steel-300);
+  --tint-slate-bg: var(--slate-dim);
+  --tint-slate-fg: var(--slate-300);
+  --tint-stone-bg: var(--stone-dim);
+  --tint-stone-fg: var(--stone-300);
+}
+
+/* ---------- 3b. Semantic roles: dark (system) — keep identical to 3 ---------- */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --bg: #161513;
-    --surface: #1e1d1a;
-    --ink: #ebe7df;
-    --ink-muted: #9e988c;
-    --rule: #2f2d29;
-    --rule-strong: #45423c;
-    --accent: #e0915f;
-    --accent-soft: #3a2a20;
-    --focus: #e0915f;
+    --bg: var(--night-900);
+    --surface: var(--night-850);
+    --surface-2: var(--night-800);
+    --text: var(--night-100);
+    --text-muted: var(--night-300);
+    --line: var(--night-700);
+    --line-strong: var(--night-500);
+    --accent: var(--cobalt-300);
+    --accent-hover: var(--cobalt-200);
+    --accent-soft: var(--cobalt-dim);
+    --on-accent: var(--night-950);
+    --focus: var(--cobalt-300);
+    --ok: var(--green-300);
+    --ok-bg: var(--green-dim);
+    --warn: var(--amber-300);
+    --warn-bg: var(--amber-dim);
+    --danger: var(--red-300);
+    --danger-hover: var(--red-200);
+    --danger-bg: var(--red-dim);
+    --on-danger: var(--night-950);
+    --scrollbar-thumb: var(--night-500);
+    --shadow-raised: var(--shadow-night);
+
+    --tint-cobalt-bg: var(--cobalt-dim);
+    --tint-cobalt-fg: var(--cobalt-200);
+    --tint-indigo-bg: var(--indigo-dim);
+    --tint-indigo-fg: var(--indigo-300);
+    --tint-steel-bg: var(--steel-dim);
+    --tint-steel-fg: var(--steel-300);
+    --tint-slate-bg: var(--slate-dim);
+    --tint-slate-fg: var(--slate-300);
+    --tint-stone-bg: var(--stone-dim);
+    --tint-stone-fg: var(--stone-300);
   }
 }

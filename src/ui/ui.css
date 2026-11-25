@@ -1,0 +1,466 @@
+/*
+ * Component kit styles. Semantic roles and scale tokens only (no colour
+ * literals or font names: src/styles/guard.test.ts enforces it).
+ * Hover effects sit under @media (hover: hover) so touch screens don't get
+ * sticky hovers; forced-colors (Windows High Contrast) keeps every control's
+ * outline visible.
+ */
+
+/* ---------- AppShell ---------- */
+
+.ui-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.ui-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: var(--hairline) solid var(--line);
+}
+
+.ui-topbar__inner,
+.ui-column {
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.ui-topbar__inner.is-wide,
+.ui-column.is-wide {
+  max-width: calc(var(--column-wide) + 2 * var(--gutter));
+}
+
+.ui-topbar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.5rem;
+}
+
+.ui-topbar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding-inline: var(--space-2);
+  margin-inline-start: calc(-1 * var(--space-2));
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ui-topbar__title {
+  margin: 0;
+  padding-inline-start: var(--space-3);
+  border-inline-start: var(--hairline) solid var(--line);
+  font-family: var(--font-display);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-column {
+  padding-block: var(--space-6) var(--space-16);
+}
+
+.ui-shell__lede {
+  margin: 0 0 var(--space-6);
+  color: var(--text-muted);
+}
+
+@media (min-width: 48rem) {
+  .ui-column {
+    padding-block-start: var(--space-8);
+  }
+}
+
+/* ---------- Button ---------- */
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0 var(--space-4);
+  border: var(--hairline) solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+.ui-button--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ui-button--secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.ui-button--danger {
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ---------- Input, Select, Field ---------- */
+
+.ui-input {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--space-2) var(--space-3);
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-base); /* >= 16px: no iOS zoom on focus */
+  line-height: var(--leading-body);
+}
+
+/* Number fields: mono with tabular figures, like every other number. */
+.ui-input.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.ui-input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.ui-select {
+  position: relative;
+  display: block;
+}
+
+.ui-select__control {
+  appearance: none;
+  padding-inline-end: calc(var(--space-3) * 2 + 0.75rem);
+  cursor: pointer;
+}
+
+/* Chevron drawn with borders so it takes the text colour in every theme. */
+.ui-select::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: calc(var(--space-3) + 0.125rem);
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.ui-field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ui-field__label {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+}
+
+.ui-field__hint,
+.ui-field__error {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.ui-field__hint {
+  color: var(--text-muted);
+}
+
+.ui-field__error {
+  color: var(--danger);
+}
+
+/* ---------- Card ---------- */
+
+.ui-card {
+  background: var(--surface);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+/* ---------- ListRow and AppMark ---------- */
+
+.ui-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-listrow {
+  border-bottom: var(--hairline) solid var(--line);
+}
+
+.ui-listrow__link {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 4.5rem;
+  padding: var(--space-3) var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  border-radius: var(--radius);
+  color: inherit;
+  text-decoration: none;
+}
+
+.ui-listrow__text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.ui-listrow__title {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+}
+
+.ui-listrow__desc {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.ui-listrow__arrow {
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  transition:
+    transform var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+.ui-mark {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.ui-mark--cobalt {
+  background: var(--tint-cobalt-bg);
+  color: var(--tint-cobalt-fg);
+}
+.ui-mark--indigo {
+  background: var(--tint-indigo-bg);
+  color: var(--tint-indigo-fg);
+}
+.ui-mark--steel {
+  background: var(--tint-steel-bg);
+  color: var(--tint-steel-fg);
+}
+.ui-mark--slate {
+  background: var(--tint-slate-bg);
+  color: var(--tint-slate-fg);
+}
+.ui-mark--stone {
+  background: var(--tint-stone-bg);
+  color: var(--tint-stone-fg);
+}
+
+/* ---------- Segmented control (ThemeToggle) ---------- */
+
+.ui-segmented {
+  display: inline-flex;
+  padding: 0.1875rem;
+  gap: 0.1875rem;
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.ui-segmented__option {
+  min-height: calc(var(--tap) - 0.5rem);
+  min-width: var(--tap);
+  padding: 0 var(--space-3);
+  border: var(--hairline) solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.ui-segmented__option[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Keep the full 44px hit area on touch screens. */
+@media (pointer: coarse) {
+  .ui-segmented__option {
+    min-height: var(--tap);
+  }
+}
+
+/* ---------- Toast ---------- */
+
+.ui-toast-region {
+  position: fixed;
+  inset-inline: 0;
+  bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--gutter);
+  pointer-events: none;
+}
+
+.ui-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 28rem;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border: var(--hairline) solid var(--line);
+  border-inline-start: 0.25rem solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-raised);
+  pointer-events: auto;
+  animation: ui-toast-in 200ms var(--ease);
+}
+
+.ui-toast--ok {
+  border-inline-start-color: var(--ok);
+}
+.ui-toast--warn {
+  border-inline-start-color: var(--warn);
+}
+.ui-toast--danger {
+  border-inline-start-color: var(--danger);
+}
+
+.ui-toast__message {
+  flex: 1;
+}
+
+.ui-toast__close {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+/* ---------- Mouse-only hover ---------- */
+
+@media (hover: hover) {
+  .ui-topbar__back:hover {
+    color: var(--accent);
+  }
+  .ui-button--primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  .ui-button--secondary:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .ui-button--danger:hover:not(:disabled) {
+    background: var(--danger-hover);
+  }
+  .ui-input:hover:not(:focus) {
+    border-color: var(--text-muted);
+  }
+  .ui-listrow__link:hover .ui-listrow__title,
+  .ui-listrow__link:hover .ui-listrow__arrow {
+    color: var(--accent);
+  }
+  .ui-listrow__link:hover .ui-listrow__arrow {
+    transform: translateX(0.1875rem);
+  }
+  .ui-segmented__option:hover:not([aria-pressed="true"]) {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+  .ui-toast__close:hover {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+}
+
+/* ---------- Windows High Contrast ---------- */
+
+@media (forced-colors: active) {
+  .ui-button,
+  .ui-segmented__option,
+  .ui-toast__close {
+    border: 1px solid ButtonText;
+  }
+  .ui-segmented__option[aria-pressed="true"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+  .ui-button:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    opacity: 1;
+  }
+  .ui-select::after {
+    border-color: ButtonText;
+  }
+  .ui-mark {
+    border: 1px solid CanvasText;
+  }
+  .ui-toast {
+    border: 2px solid CanvasText;
+  }
+}

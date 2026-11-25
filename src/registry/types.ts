@@ -1,3 +1,5 @@
+import type { AppTint } from "@/ui/tints";
+
 /**
  * An app's manifest: the only thing the homepage needs to know about it.
  *
@@ -25,6 +27,8 @@ interface ManifestBase {
   description: string;
   /** One or two characters (a letter or a symbol), shown in the tile's mark. */
   icon: string;
+  /** Tile colour from the fixed set in src/ui/tints.ts (default "cobalt"). */
+  tint?: AppTint;
   visibility: AppVisibility;
 }
 

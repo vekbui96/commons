@@ -1,3 +1,4 @@
+import { APP_TINTS, isAppTint } from "@/ui/tints";
 import type { AppManifest } from "./types";
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -32,6 +33,9 @@ export function validateManifest(manifest: unknown, folder: string, hasComponent
   }
   if (typeof m.icon !== "string" || m.icon.trim() === "" || [...m.icon].length > 2) {
     errors.push(`${where}: icon must be one or two characters`);
+  }
+  if (m.tint !== undefined && !isAppTint(m.tint)) {
+    errors.push(`${where}: tint must be one of ${APP_TINTS.join(", ")}`);
   }
   if (m.visibility !== "public" && m.visibility !== "private") {
     errors.push(`${where}: visibility must be "public" or "private"`);

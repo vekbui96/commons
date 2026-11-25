@@ -5,6 +5,7 @@ export default defineApp({
   name: "Units",
   description: "Quick conversions: length, weight and temperature.",
   icon: "⇄",
+  tint: "cobalt",
   kind: "internal",
   visibility: "public",
 });

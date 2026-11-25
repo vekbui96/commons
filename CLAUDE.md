@@ -21,8 +21,28 @@ shared contract is `docs/api-contract.md`.
   LAN addresses or secrets anywhere in `src/`. A registry test enforces the host
   rule. `VITE_` values end up in the public bundle.
 - `private` apps stay hidden until the API has auth.
-- Styling goes through `src/styles/tokens.css` variables; keep it plain,
-  light + dark, phone first. No cards nested inside cards.
+- **Mobile first; must look good on Windows.** This is a rule, not a
+  suggestion. Every UI change is checked at 390px and at 1440px with
+  Windows-style 125% scaling (Playwright `deviceScaleFactor: 1.25`), in both
+  light and dark (and forced-colors for new controls).
+- **One style system.** Colours, fonts, type, space, radii and shadows live only
+  in `src/styles/tokens.css` (primitives -> semantic roles -> dark roles) and
+  `tokens-fonts.css` (self-hosted OFL fonts). Apps use semantic roles only
+  (`--bg`, `--surface`, `--text`, `--accent`, ...), never primitives.
+  `src/styles/guard.test.ts` fails on any hex/`rgb(`/`hsl(` colour, font name or
+  weight below 400 outside `src/styles/tokens*.css` (exception: a
+  `style-guard-allow` comment with a reason). `tokens.test.ts` checks WCAG AA
+  contrast for the key pairs in both modes; keep it green when changing colours.
+- Plain, light + dark, phone first. No cards nested inside cards. 44px tap
+  targets, visible focus, hover only under `@media (hover: hover)`.
+
+## How to style a new app (5 lines)
+
+1. Wrap nothing: `AppHost` already puts your `App.tsx` in `<AppShell>` (top bar, ~680px column).
+2. Build from `@/ui`: `Button`, `Input`, `Select`, `Field`, `ListRow`, `Card`, `Toast`/`useToast`.
+3. Extra CSS goes in `src/apps/<id>/<id>.css`, layout only, using `var(--space-*)`, `var(--text-*)` and semantic roles.
+4. Numbers get `className="num"` (mono, tabular figures). Optional `tint` in the manifest picks the icon tile colour.
+5. `npm run verify` (guard + contrast tests), then check 390px and 1440px @1.25, light and dark.
 
 ## Commands
 

@@ -2,6 +2,7 @@
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { AppRoutes } from "./shell/AppRoutes";
+import "./styles/tokens-fonts.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 

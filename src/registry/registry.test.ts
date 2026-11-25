@@ -79,6 +79,8 @@ describe("validateManifest", () => {
     expect(validateManifest({ ...good, icon: "abc" }, "demo", false)).toHaveLength(1);
     expect(validateManifest({ ...good, visibility: "team" }, "demo", false)).toHaveLength(1);
     expect(validateManifest({ ...good, description: "two\nlines" }, "demo", false)).toHaveLength(1);
+    expect(validateManifest({ ...good, tint: "rust" }, "demo", false)).toHaveLength(1);
+    expect(validateManifest({ ...good, tint: "steel" }, "demo", false)).toEqual([]);
   });
 
   it("requires an App.tsx for internal apps", () => {

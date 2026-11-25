@@ -27,7 +27,8 @@ commons/
 │  ├─ registry/          discovers apps/*/manifest.ts, validates them
 │  ├─ shell/             homepage, app host, routes (hash router)
 │  ├─ api/client.ts      the only module that calls the Commons API
-│  └─ styles/            tokens.css (all colours/type/space) + base.css
+│  ├─ ui/                shared component kit (AppShell, Button, Input, ...)
+│  └─ styles/            tokens.css, tokens-fonts.css, fonts/, base.css
 ├─ docs/api-contract.md
 └─ .github/workflows/    ci.yml, deploy-pages.yml
 ```
@@ -42,6 +43,47 @@ commons/
   server fallback.
 - API calls go through `src/api/client.ts`, with the base URL from
   `VITE_COMMONS_API`. It is unset for now, which means no backend features.
+
+## Rule: mobile first, and it must look good on Windows
+
+Not a suggestion. Every UI change is checked at **390px** and at **1440px with
+Windows-style 125% scaling** (`deviceScaleFactor: 1.25`), in **light and dark**.
+
+## Style system
+
+One global system controls every app's look:
+
+- `src/styles/tokens.css`: **primitives** (palette, font stacks, type scale in
+  rem, spacing, radii, shadows) -> **semantic roles** (`--bg`, `--surface`,
+  `--surface-2`, `--text`, `--text-muted`, `--line`, `--line-strong`,
+  `--accent`, `--accent-hover`, `--on-accent`, `--focus`, `--ok`, `--warn`,
+  `--danger` and their `-bg` variants) -> **dark mode**, which redefines roles only.
+  Theme follows `prefers-color-scheme`; the homepage toggle (light / dark /
+  system) is stored in `localStorage`.
+- Palette: warm paper with cobalt blue (`#1f4fbf` light, `#7ea3ff` dark) as the
+  one accent. App icon tiles may use one of five fixed tints
+  (`cobalt`, `indigo`, `steel`, `slate`, `stone`) via the manifest's `tint`.
+- `src/styles/tokens-fonts.css`: self-hosted fonts, all SIL OFL 1.1 (licences in
+  `src/styles/fonts/`): **Newsreader** (headings), **Source Sans 3** (UI),
+  **JetBrains Mono** (numbers, tabular figures), with metric-matched Segoe UI /
+  Helvetica Neue fallbacks to keep layout shift small.
+- `src/ui/`: the kit. `AppShell`, `Button` (primary / secondary / danger),
+  `Input`, `Select`, `Field`, `ListRow`, `Card`, `Toast` + `useToast`,
+  `ThemeToggle`, `AppMark`. 44px tap targets, focus rings, mouse-only hover,
+  forced-colors and reduced-motion support.
+- Guards: `src/styles/guard.test.ts` fails on any hex / `rgb(` / `hsl(` colour,
+  font name or weight below 400 outside `src/styles/tokens*.css` (exception: a
+  `style-guard-allow` comment with a reason). `src/styles/tokens.test.ts` checks
+  WCAG AA contrast (4.5:1 text, 3:1 UI) for the key pairs in both modes.
+- Keys: `/` focuses the homepage filter; Esc leaves an app.
+
+### How to style a new app
+
+1. `AppHost` already wraps your `App.tsx` in `<AppShell>` (top bar, ~680px column).
+2. Build from `@/ui`: `Button`, `Input`, `Select`, `Field`, `ListRow`, `Card`, `Toast`.
+3. Extra CSS in `src/apps/<id>/<id>.css`: layout only, with `var(--space-*)`, `var(--text-*)` and semantic roles.
+4. Numbers get `className="num"`; an optional manifest `tint` colours the icon tile.
+5. `npm run verify`, then look at 390px and 1440px @1.25, light and dark.
 
 ## Local development
 
