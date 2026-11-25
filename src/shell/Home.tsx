@@ -32,8 +32,8 @@ export function Home({ apps = listedApps() }: { apps?: RegisteredApp[] }) {
   return (
     <div className="home">
       <header className="home__intro">
-        <SiteMark />
         <h1 className="home__wordmark">Commons</h1>
+        <SiteMark />
         <p className="home__lede">Small apps and utilities, made as they are needed.</p>
       </header>
 

@@ -26,7 +26,9 @@
   width: 100%;
   max-width: calc(var(--column) + 2 * var(--gutter));
   margin: 0 auto;
-  padding-inline: var(--gutter);
+  /* viewport-fit=cover (index.html): clear the notch in landscape. */
+  padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px))
+    max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 
 .ui-topbar__inner.is-wide,
@@ -70,7 +72,7 @@
 }
 
 .ui-column {
-  padding-block: var(--space-6) var(--space-16);
+  padding-block: var(--space-6) calc(var(--space-16) + env(safe-area-inset-bottom, 0px));
 }
 
 /* "Private" label: only rendered on the private (tailnet-only) build. */
