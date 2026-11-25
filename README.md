@@ -23,13 +23,16 @@ commons/
 ├─ src/
 │  ├─ apps/<id>/         one folder per app
 │  │  ├─ manifest.ts     id, name, description, icon, kind, visibility
-│  │  └─ App.tsx         internal apps only, lazy-loaded at #/apps/<id>
+│  │  ├─ App.tsx         internal apps only, lazy-loaded at #/apps/<id>
+│  │  └─ CLAUDE.md       internal apps only: the app's own short agent notes
 │  ├─ registry/          discovers apps/*/manifest.ts, validates them
 │  ├─ shell/             homepage, app host, routes (hash router)
 │  ├─ api/client.ts      the only module that calls the Commons API
 │  ├─ ui/                shared component kit (AppShell, Button, Input, ...)
 │  └─ styles/            tokens.css, tokens-fonts.css, fonts/, base.css
-├─ docs/api-contract.md
+├─ docs/api-contract.md, docs/templates/app-CLAUDE.md
+├─ eslint/app-boundaries.js   the wall between apps (lint rule)
+├─ scripts/check-app.mjs      npm run check:app -- <id>
 └─ .github/workflows/    ci.yml, deploy-pages.yml
 ```
 
@@ -90,6 +93,7 @@ One global system controls every app's look:
 ```powershell
 npm install
 npm run dev       # http://localhost:5180 (proxies /api to a local Commons API on 8790)
+npm run check:app -- <id>  # one app's lint + tests while working
 npm run verify    # format check, typecheck, lint, tests (what CI runs)
 npm run build     # production build into dist/ (base /commons/)
 npm run preview   # serve dist/ at http://localhost:4173/commons/
@@ -103,12 +107,48 @@ such as `VITE_BASE=/commons/` and breaks every asset.
 1. Create `src/apps/<id>/manifest.ts` with `export default defineApp({...})`.
    The id is kebab-case and must equal the folder name.
 2. For an internal app, add `App.tsx` in the same folder with a default-exported
-   component. For an external app, set `kind: "external"` and an https `url`.
+   component, and a short `CLAUDE.md` (15 lines or fewer) copied from
+   [`docs/templates/app-CLAUDE.md`](docs/templates/app-CLAUDE.md): what the app
+   does, its files, its own rules, how to test it. For an external app, set
+   `kind: "external"` and an https `url`; it needs no CLAUDE.md.
 3. If it needs a backend, add `src/apps/<id>/routes.ts` in `commons-api` with
    the same id; call it here with `appApiUrl("<id>", "...")` from the client.
 
 The registry tests check every manifest (valid fields, unique ids, https URLs,
-an `App.tsx` for internal apps), so `npm run verify` catches mistakes.
+an `App.tsx` and a CLAUDE.md for internal apps), so `npm run verify` catches
+mistakes.
+
+### Per-app CLAUDE.md
+
+App-specific detail lives in `src/apps/<id>/CLAUDE.md`, never in the root
+`CLAUDE.md`, which stays a short index plus the shared rules. This keeps an
+agent's context small: it reads the root and the one app it is working on.
+
+### The wall between apps
+
+No source imports between apps. A file in `src/apps/<a>/` may import only from
+its own folder, `src/ui`, `src/api`, `src/styles` and `src/registry/types` (for
+`defineApp`); nothing outside `src/apps/` may import an app's files (the
+registry's `import.meta.glob` discovery is not an import and stays allowed).
+ESLint enforces this with a local rule, `commons/app-boundaries`
+(`eslint/app-boundaries.js`).
+
+A finished app is reused only as a published runtime embed: a web component at
+a versioned URL such as `embed/v1.js`, loaded live. No embed exists yet; the rule
+is recorded so nobody imports another app's source in the meantime.
+
+## Checks
+
+```powershell
+npm run check:app -- units   # one app: eslint + vitest on src/apps/units, plus touched shared code
+npm run verify               # everything (what CI runs); once before every commit
+```
+
+`check:app` lints and tests `src/apps/<id>/`, plus any files under `src/shell`,
+`src/ui`, `src/registry`, `src/api` or `src/styles` changed in the working tree
+(vs `HEAD`, untracked included). The registry test and the style guard always
+run since they check every app. It is plain Node, so it behaves the same in
+PowerShell and CI. CI always runs the full `verify`.
 
 ## Deploy
 

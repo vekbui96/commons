@@ -4,6 +4,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import commons from "./eslint/app-boundaries.js";
 
 export default tseslint.config(
   {
@@ -20,8 +21,11 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      commons,
     },
     rules: {
+      // The wall between apps: see eslint/app-boundaries.js and CLAUDE.md.
+      "commons/app-boundaries": "error",
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
@@ -29,7 +33,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["*.config.{ts,js}"],
+    files: ["*.config.{ts,js}", "scripts/**/*.{js,mjs}", "eslint/**/*.js"],
     languageOptions: {
       globals: { ...globals.node },
     },

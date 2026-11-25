@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { findInternalApp, listedApps, registry } from "./registry";
 import { duplicateIds, validateManifest } from "./validate";
@@ -11,6 +13,17 @@ describe("app registry", () => {
   it.each(registry.map((app) => [app.folder, app] as const))("apps/%s has a valid manifest", (_, app) => {
     expect(validateManifest(app.manifest, app.folder, app.load !== undefined)).toEqual([]);
   });
+
+  // App-specific detail lives next to the app, never in the root CLAUDE.md.
+  it.each(registry.filter((app) => app.manifest.kind === "internal").map((app) => [app.folder] as const))(
+    "apps/%s (internal) has its own short CLAUDE.md",
+    (folder) => {
+      const file = join(process.cwd(), "src", "apps", folder, "CLAUDE.md");
+      expect(existsSync(file), `add src/apps/${folder}/CLAUDE.md (docs/templates/app-CLAUDE.md)`).toBe(true);
+      const lines = readFileSync(file, "utf8").trimEnd().split("\n").length;
+      expect(lines, `src/apps/${folder}/CLAUDE.md is ${lines} lines; keep it to 15`).toBeLessThanOrEqual(15);
+    },
+  );
 
   it("has unique ids", () => {
     expect(duplicateIds(registry.map((app) => app.manifest))).toEqual([]);
