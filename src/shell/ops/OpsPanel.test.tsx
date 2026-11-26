@@ -2,7 +2,8 @@ import { StrictMode } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resetTabBadges, useTabBadges } from "../tabBadges";
+import { resetTabBadges, setTabBadge, useTabBadges } from "../tabBadges";
+import { OPS_COUNT_INTERVAL_MS, resetOpsCountState, startOpsCount } from "./background";
 import { OPS_API_BASE, OPS_TAB_ID, healthUrl, loaderUrl, standaloneUrl } from "./config";
 import { OpsPanelView, currentTheme, isOpsHubModule, type OpsHubModule } from "./OpsPanel";
 
@@ -48,6 +49,7 @@ function Badge() {
 
 beforeEach(() => {
   resetTabBadges();
+  resetOpsCountState();
   document.documentElement.removeAttribute("data-theme");
 });
 afterEach(() => {
@@ -224,5 +226,35 @@ describe("OpsPanel", () => {
       );
     });
     expect(screen.getByTestId("badge")).toHaveTextContent("0");
+  });
+
+  it("keeps the last badge when the hub isn't answering", async () => {
+    setTabBadge(OPS_TAB_ID, 4);
+    render(
+      <>
+        <OpsPanelView load={() => Promise.reject(new Error("offline"))} checkHealth={healthy} />
+        <Badge />
+      </>,
+    );
+    expect(await screen.findByText("The ops hub isn't answering.")).toBeInTheDocument();
+    expect(screen.getByTestId("badge")).toHaveTextContent("4");
+  });
+
+  it("stops the background count while the hub is mounted, and resumes it after", async () => {
+    const hub = fakeHub();
+    const fetchCount = vi.fn(() => Promise.resolve({ needsYou: 2, stale: false }));
+    const stop = startOpsCount({ load: () => Promise.resolve({ fetchCount }) });
+    await waitFor(() => expect(fetchCount).toHaveBeenCalledTimes(1));
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const view = render(<OpsPanelView load={() => Promise.resolve(hub.mod)} checkHealth={healthy} />);
+    await screen.findByText("hub content");
+    await act(() => vi.advanceTimersByTimeAsync(3 * OPS_COUNT_INTERVAL_MS));
+    expect(fetchCount).toHaveBeenCalledTimes(1);
+
+    view.unmount();
+    await act(() => vi.advanceTimersByTimeAsync(OPS_COUNT_INTERVAL_MS));
+    expect(fetchCount).toHaveBeenCalledTimes(2);
+    stop();
   });
 });

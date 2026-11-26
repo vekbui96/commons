@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/ui";
-import { setTabBadge } from "../tabBadges";
-import { OPS_API_BASE, OPS_TAB_ID, OPS_TIMEOUT_MS, healthUrl, loaderUrl, standaloneUrl } from "./config";
+import { opsPanelMounted, reportOpsCount } from "./background";
+import { OPS_API_BASE, OPS_TIMEOUT_MS, healthUrl, standaloneUrl } from "./config";
+import { loadOpsHub } from "./hubModule";
 import "./ops.css";
 
 /**
@@ -38,11 +39,6 @@ export function isOpsHubModule(mod: unknown): mod is OpsHubModule {
   return !!m && typeof m.mount === "function" && typeof m.unmount === "function";
 }
 
-/** Imports the hub's loader. No host is written anywhere: the URL comes from location.origin. */
-export function importOpsHub(): Promise<unknown> {
-  return import(/* @vite-ignore */ loaderUrl());
-}
-
 /** True when the action server answers. */
 export async function opsHubHealthy(signal: AbortSignal): Promise<boolean> {
   try {
@@ -66,7 +62,7 @@ function forcedColorsQuery(): MediaQueryList | null {
 type Status = "loading" | "mounted" | "unreachable" | "crashed";
 
 export interface OpsPanelViewProps {
-  /** The loader seam (tests inject a fake hub). */
+  /** The loader seam (tests inject a fake hub). Default: the page's shared module (hubModule.ts). */
   load?: () => Promise<unknown>;
   /** The health check seam. */
   checkHealth?: (signal: AbortSignal) => Promise<boolean>;
@@ -74,7 +70,7 @@ export interface OpsPanelViewProps {
 }
 
 export function OpsPanelView({
-  load = importOpsHub,
+  load = loadOpsHub,
   checkHealth = opsHubHealthy,
   timeoutMs = OPS_TIMEOUT_MS,
 }: OpsPanelViewProps) {
@@ -111,7 +107,7 @@ export function OpsPanelView({
       if (cancelled) return;
       const el = hostRef.current;
       if (!healthy || !isOpsHubModule(mod) || !el) {
-        setTabBadge(OPS_TAB_ID, 0);
+        // Keep the last badge (the background count's, or none).
         setStatus("unreachable");
         return;
       }
@@ -147,6 +143,13 @@ export function OpsPanelView({
     };
   }, [attempt, load, checkHealth, timeoutMs]);
 
+  // While the hub is mounted its count events drive the badge; the
+  // background poll (background.ts) stands down.
+  useEffect(() => {
+    if (status !== "mounted") return;
+    return opsPanelMounted();
+  }, [status]);
+
   // Theme passthrough: CSS custom properties already inherit into the shadow
   // DOM; setTheme covers what they can't reach.
   useEffect(() => {
@@ -169,7 +172,7 @@ export function OpsPanelView({
     if (!el) return;
     const onCount = (event: Event) => {
       const detail = (event as CustomEvent<{ needsYou?: unknown }>).detail;
-      setTabBadge(OPS_TAB_ID, typeof detail?.needsYou === "number" ? detail.needsYou : 0);
+      reportOpsCount(typeof detail?.needsYou === "number" ? detail.needsYou : 0);
     };
     el.addEventListener("ops-hub:count", onCount);
     return () => el.removeEventListener("ops-hub:count", onCount);

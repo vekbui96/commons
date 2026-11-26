@@ -52,6 +52,10 @@ const opsHub = [
   { what: "Ops panel (shell/ops/OpsPanel)", needles: ["shell/ops/OpsPanel"] },
   { what: "ops hub loader path (/ops/embed/)", needles: ["/ops/embed/"] },
   { what: "ops hub API path (/ops/api)", needles: ["/ops/api"] },
+  {
+    what: "Ops badge poller (shell/ops/background, fetchCount)",
+    needles: ["shell/ops/background", "fetchCount"],
+  },
 ];
 
 const items = [...privateApps, ...privateTabs, ...opsHub];

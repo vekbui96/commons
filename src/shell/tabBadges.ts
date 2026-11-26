@@ -20,6 +20,11 @@ export function setTabBadge(tabId: string, count: number): void {
   listeners.forEach((l) => l());
 }
 
+/** The count a tab's chip shows now (0 when hidden). */
+export function getTabBadge(tabId: string): number {
+  return badges[tabId] ?? 0;
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

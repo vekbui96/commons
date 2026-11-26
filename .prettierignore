@@ -4,3 +4,5 @@ node_modules
 package-lock.json
 data
 .claude/worktrees
+# Byte-identical copy of D:\hub\docs\ops-hub-contract.md (the hub owns its format)
+docs/ops-hub-contract.md

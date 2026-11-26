@@ -183,6 +183,24 @@ describe("panel tabs", () => {
     expect(validateTab({ ...panel, load: "x" }, "view", registry)).toHaveLength(1);
     expect(resolveTab("view", [panel])?.id).toBe("view");
   });
+
+  it("may have background work only when private", () => {
+    const background = () => Promise.resolve({ default: () => () => {} });
+    expect(validateTab({ ...panel, background }, "view", registry)).toEqual([]);
+    expect(validateTab({ ...panel, background: "x" }, "view", registry)).toHaveLength(1);
+    expect(validateTab({ ...panel, visibility: "public", background }, "view", registry)).toEqual([
+      "tabs/defs/view.ts: only a private tab may have background work",
+    ]);
+  });
+
+  it("the public site has no tab with background work (no ops polling there)", () => {
+    const withBackground = (target: "public" | "private") =>
+      availableTabs(tabRegistry, target)
+        .filter((t) => t.kind === "panel" && t.background)
+        .map((t) => t.id);
+    expect(withBackground("public")).toEqual([]);
+    expect(withBackground("private")).toEqual(["ops"]);
+  });
 });
 
 describe("validateTab", () => {

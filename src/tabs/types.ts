@@ -66,7 +66,17 @@ export interface PageTab extends TabBase {
 export interface PanelTab extends TabBase {
   kind: "panel";
   load: () => Promise<{ default: ComponentType }>;
+  /**
+   * Optional work that runs from page load while the tab is closed (e.g. the
+   * Ops chip badge). A dynamic import of a module whose default export starts
+   * it and returns a stop function. Private tabs only (validate.ts), so it
+   * never reaches the public bundle. Started by src/shell/tabBackgrounds.ts.
+   */
+  background?: () => Promise<{ default: TabBackground }>;
 }
+
+/** Starts a tab's background work; returns a function that stops it. */
+export type TabBackground = () => () => void;
 
 export type TabDefinition = AppsTab | LinkTab | PageTab | PanelTab;
 

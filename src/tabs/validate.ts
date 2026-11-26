@@ -70,6 +70,13 @@ export function validateTab(tab: unknown, file: string, apps: readonly Registere
     if (typeof t.load !== "function") {
       errors.push(`${where}: load must be a function returning import("...") of a view`);
     }
+    if (t.background !== undefined) {
+      if (typeof t.background !== "function") {
+        errors.push(`${where}: background must be a function returning import("...")`);
+      } else if (t.visibility !== "private") {
+        errors.push(`${where}: only a private tab may have background work`);
+      }
+    }
   } else {
     errors.push(`${where}: kind must be "apps", "link", "page" or "panel"`);
   }

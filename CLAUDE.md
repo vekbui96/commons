@@ -60,7 +60,11 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   outside the `client.ts` rule. Contract: `docs/ops-hub-contract.md`, identical in
   `D:\hub\docs\` (change it only by agreement with the hub). URLs come from
   `location.origin`, never a host. `/ops` is served by the hub's `tailscale serve`
-  handlers on :8445; the Commons deploy never touches them.
+  handlers on :8445; the Commons deploy never touches them. Its chip badge also
+  works with the tab closed: the tab's `background` (`src/shell/ops/background.ts`,
+  started by `src/shell/tabBackgrounds.ts`) calls the hub's `fetchCount` at most
+  every 5 min while the page is visible, and stands down while the panel is mounted.
+  Background work is for private tabs only (`validate.ts`).
 - **Reachable is not configured.** The API answers only on the tailnet. Wrap API
   features in `<NeedsApi>` (or `useApi()`: `checking | reachable | unreachable`);
   unreachable shows a quiet "Connect to Tailscale to use this", never an error.

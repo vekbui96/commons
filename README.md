@@ -234,14 +234,20 @@ against `location.origin`, never a host: the source is public.
   `GET /ops/api/healthz` fails within about 4 s) with Retry and a link to the
   standalone page at `/ops/`; a crash state (mount throws or the element reports
   `onError`).
-- The chip badge counts the hub's **Needs you** items (`ops-hub:count`), hidden
-  at 0, no sound or push. It is the last count this page saw.
+- The chip badge counts the hub's **Needs you** items, hidden at 0, no sound or
+  push. With the tab closed, `src/shell/ops/background.ts` (the tab def's
+  `background`, started at page load) calls the hub's headless `fetchCount`
+  at most every 5 minutes, only while the page is visible (on visible again,
+  once if the last count is over 5 minutes old). While the hub is mounted its
+  `ops-hub:count` events win and the poll stops. A failed count keeps the last
+  badge. The panel and the poll share one import of the loader (`hubModule.ts`).
 - Theme: the element inherits the tokens through its shadow DOM; the panel also
   calls `setTheme` when `data-theme` or forced colours change.
 - Dev: `COMMONS_OPS_TARGET` / `COMMONS_OPS_API_TARGET` proxy `/ops` and
   `/ops/api` (see `vite.config.ts`); unset, the tab says the hub isn't answering.
 - `check-dist public` fails on `shell/ops/OpsPanel`, `/ops/embed/`, `/ops/api`,
-  `.ts.net` or `:8444` in `dist/`; `check-dist private` requires the first three.
+  `shell/ops/background`, `fetchCount`, `.ts.net` or `:8444` in `dist/`;
+  `check-dist private` requires all but the last two.
 
 ## Checks
 

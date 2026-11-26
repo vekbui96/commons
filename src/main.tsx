@@ -4,12 +4,17 @@ import { HashRouter } from "react-router-dom";
 import { AppRoutes } from "./shell/AppRoutes";
 import { ProfileProvider } from "./profiles/useProfile";
 import { isPrivateSite } from "./site";
+import { startTabBackgrounds } from "./shell/tabBackgrounds";
 import "./styles/tokens-fonts.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 
 // The private (tailnet-only) build says so in the tab title too.
 if (isPrivateSite()) document.title = "Commons (private)";
+
+// Background work of the tabs on this site (private build: the Ops badge).
+// Outside React, so StrictMode never starts it twice.
+startTabBackgrounds();
 
 // Hash routing so deep links (#/apps/units) work on GitHub Pages without a
 // server-side fallback.

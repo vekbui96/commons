@@ -8,6 +8,8 @@ export default defineTab({
   icon: "pulse",
   kind: "panel",
   load: () => import("@/shell/ops/OpsPanel"),
+  // The chip badge without opening the tab: fetchCount every 5 min while visible.
+  background: () => import("@/shell/ops/background"),
   order: 25,
   visibility: "private",
 });
