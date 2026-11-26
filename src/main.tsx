@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { AppRoutes } from "./shell/AppRoutes";
+import { ProfileProvider } from "./profiles/useProfile";
 import { isPrivateSite } from "./site";
 import "./styles/tokens-fonts.css";
 import "./styles/tokens.css";
@@ -15,7 +16,10 @@ if (isPrivateSite()) document.title = "Commons (private)";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AppRoutes />
+      {/* Visitor profiles: public build only; the private build ignores them. */}
+      <ProfileProvider>
+        <AppRoutes />
+      </ProfileProvider>
     </HashRouter>
   </StrictMode>,
 );

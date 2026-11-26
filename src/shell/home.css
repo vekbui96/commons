@@ -104,6 +104,13 @@
   color: var(--accent);
 }
 
+/* A long first name stays on one line, trimmed. */
+.site-avatar__label {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 button.site-avatar {
   cursor: pointer;
 }
@@ -213,7 +220,8 @@ button.site-avatar {
     color: var(--accent);
   }
 
-  .home-pill__link:hover {
+  .home-pill__link:hover,
+  button.site-avatar:hover {
     color: var(--text);
     border-color: var(--line-strong);
   }

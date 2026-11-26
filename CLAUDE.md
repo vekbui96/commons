@@ -24,6 +24,7 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   how to test it). Read the one for the app you are changing.
 - `docs/templates/app-CLAUDE.md`: the template for a new app's CLAUDE.md.
 - `src/tabs/CLAUDE.md`: the homepage tabs (the chips under the top bar).
+- `src/profiles/CLAUDE.md`: visitor profiles (public build: which public apps a guest or a named visitor sees; `profiles.json` is the allowlist). Tailoring, never access control.
 
 ## Rules
 

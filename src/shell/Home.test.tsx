@@ -8,6 +8,8 @@ import { Home } from "./Home";
 import { listedApps, type RegisteredApp } from "@/registry/registry";
 import { availableTabs, tabRegistry } from "@/tabs/registry";
 import { defineTab, type TabDefinition } from "@/tabs/types";
+import { ProfileProvider } from "@/profiles/useProfile";
+import { PROFILE_STORAGE_KEY } from "@/profiles/storage";
 
 const future = { v7_startTransition: true, v7_relativeSplatPath: true } as const;
 
@@ -24,11 +26,15 @@ function Where() {
   );
 }
 
-function renderAt(path: string) {
+/** The public site, as a guest or (with `profile`) a remembered visitor. */
+function renderAt(path: string, { profile }: { profile?: string } = {}) {
+  if (profile) localStorage.setItem(PROFILE_STORAGE_KEY, profile);
   return render(
     <MemoryRouter initialEntries={[path]} future={future}>
-      <AppRoutes />
-      <Where />
+      <ProfileProvider>
+        <AppRoutes />
+        <Where />
+      </ProfileProvider>
     </MemoryRouter>,
   );
 }
@@ -37,12 +43,14 @@ function renderAt(path: string) {
 function renderSite(path: string, tabs: TabDefinition[], apps: RegisteredApp[] = listedApps()) {
   return render(
     <MemoryRouter initialEntries={[path]} future={future}>
-      <Routes>
-        <Route path="/" element={<Home tabs={tabs} apps={apps} />} />
-        <Route path="/tab/:tabId" element={<Home tabs={tabs} apps={apps} />} />
-        <Route path="/apps/:id" element={<AppHost />} />
-      </Routes>
-      <Where />
+      <ProfileProvider enabled={false}>
+        <Routes>
+          <Route path="/" element={<Home tabs={tabs} apps={apps} />} />
+          <Route path="/tab/:tabId" element={<Home tabs={tabs} apps={apps} />} />
+          <Route path="/apps/:id" element={<AppHost />} />
+        </Routes>
+        <Where />
+      </ProfileProvider>
     </MemoryRouter>,
   );
 }
@@ -79,6 +87,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 describe("homepage", () => {
@@ -89,17 +98,33 @@ describe("homepage", () => {
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
-  it("selects the Public tab by default and lists every public app", () => {
+  it("selects the Public tab by default and shows a guest only Portfolio", () => {
     renderAt("/");
     expect(screen.getAllByRole("tab")).toHaveLength(1);
     expect(selectedTab()).toHaveAccessibleName("Public");
     const panel = screen.getByRole("tabpanel", { name: "Public" });
     const list = within(panel).getByRole("list", { name: /Public/ });
-    expect(within(list).getAllByRole("listitem")).toHaveLength(listedApps().length);
+    const items = within(list).getAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent("Portfolio");
+  });
+
+  it("shows Tammy Portfolio, Units and CardLens", () => {
+    renderAt("/", { profile: "tammy" });
+    expect(screen.getByRole("button", { name: "Tammy" })).toBeInTheDocument();
+    const list = within(screen.getByRole("tabpanel", { name: "Public" })).getByRole("list", {
+      name: /Public/,
+    });
+    const names = within(list)
+      .getAllByRole("listitem")
+      .map((item) => item.textContent);
+    expect(names).toHaveLength(3);
+    for (const name of ["CardLens", "Portfolio", "Units"])
+      expect(names.some((text) => text?.includes(name))).toBe(true);
   });
 
   it("links external apps out in a new tab", () => {
-    renderAt("/");
+    renderAt("/", { profile: "tammy" });
     const cardlens = screen.getByRole("link", { name: /CardLens/ });
     expect(cardlens).toHaveAttribute("href", "https://vekbui96.github.io/cardlens/");
     expect(cardlens).toHaveAttribute("target", "_blank");
@@ -111,7 +136,7 @@ describe("homepage", () => {
   });
 
   it("opens an internal app on its own route", async () => {
-    renderAt("/");
+    renderAt("/", { profile: "tammy" });
     await userEvent.click(screen.getByRole("link", { name: /Units/ }));
     expect(await screen.findByRole("heading", { level: 1, name: "Units" })).toBeInTheDocument();
     // The lazy App.tsx has loaded and converts: 1 km = 0.6214 mi.
@@ -134,6 +159,25 @@ describe("homepage", () => {
   it("shows a not-found page for unknown apps", () => {
     renderAt("/apps/does-not-exist");
     expect(screen.getByRole("heading", { name: "Not here" })).toBeInTheDocument();
+    expect(screen.getByText("There is no app at this address.")).toBeInTheDocument();
+  });
+
+  it("gates a deep link to an app outside the profile, with a hint", () => {
+    renderAt("/apps/units");
+    expect(screen.getByRole("heading", { name: "Not here" })).toBeInTheDocument();
+    expect(screen.getByText("Not in your view; tap Guest to switch.")).toBeInTheDocument();
+    expect(screen.queryByTestId("units-result")).not.toBeInTheDocument();
+  });
+
+  it("opens the same deep link for a profile that has the app", async () => {
+    renderAt("/apps/units", { profile: "tammy" });
+    expect(await screen.findByRole("heading", { level: 1, name: "Units" })).toBeInTheDocument();
+  });
+
+  it("applies ?profile= from the hash route and strips it", async () => {
+    renderAt("/apps/units?profile=Tammy");
+    expect(await screen.findByRole("heading", { level: 1, name: "Units" })).toBeInTheDocument();
+    expect(localStorage.getItem(PROFILE_STORAGE_KEY)).toBe("tammy");
   });
 });
 

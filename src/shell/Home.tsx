@@ -1,12 +1,13 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { findInternalApp, listedApps, appPath, type RegisteredApp } from "@/registry/registry";
 import { appsForTab, availableTabs, resolveTab, tabPath, type SelectableTab } from "@/tabs/registry";
 import type { AppsTab, PageTab, TabDefinition } from "@/tabs/types";
+import { useProfile } from "@/profiles/useProfile";
 import { ListRow, ThemeToggle } from "@/ui";
 import { lazyFor } from "./lazyApp";
 import { fromTab, tabDomId } from "./navState";
-import { SiteAvatar } from "./SiteAvatar";
+import { ProfileAvatar } from "./SiteAvatar";
 import { TabCarousel } from "./TabCarousel";
 import "./home.css";
 
@@ -24,6 +25,16 @@ function useScrolled(): boolean {
   return scrolled;
 }
 
+/** A tab that shows one app (a page, or a link to `#/apps/<id>`) needs that app enabled. */
+function tabEnabled(tab: TabDefinition, isEnabled: (appId: string) => boolean): boolean {
+  if (tab.kind === "page") return isEnabled(tab.app);
+  if (tab.kind === "link") {
+    const match = /^#\/apps\/([a-z0-9-]+)/.exec(tab.url);
+    return match ? isEnabled(match[1]!) : true;
+  }
+  return true;
+}
+
 export interface HomeProps {
   apps?: RegisteredApp[];
   tabs?: TabDefinition[];
@@ -35,7 +46,15 @@ export interface HomeProps {
  * under the header. The selected tab lives in the URL: `#/tab/<id>`, `#/` for
  * the default.
  */
-export function Home({ apps = listedApps(), tabs = availableTabs() }: HomeProps) {
+// This build's apps and tabs never change at runtime: work them out once.
+const BUILD_APPS = listedApps();
+const BUILD_TABS = availableTabs();
+
+export function Home({ apps: allApps = BUILD_APPS, tabs: allTabs = BUILD_TABS }: HomeProps) {
+  // The visitor's profile narrows what this build offers (public build only).
+  const profile = useProfile();
+  const apps = useMemo(() => profile.filterApps(allApps), [profile, allApps]);
+  const tabs = useMemo(() => allTabs.filter((t) => tabEnabled(t, profile.isEnabled)), [profile, allTabs]);
   const { tabId } = useParams();
   const navigate = useNavigate();
   const scrolled = useScrolled();
@@ -67,7 +86,7 @@ export function Home({ apps = listedApps(), tabs = availableTabs() }: HomeProps)
                 Commons
               </Link>
             </h1>
-            <SiteAvatar />
+            <ProfileAvatar />
           </div>
           {tabs.length > 0 && (
             <TabCarousel tabs={tabs} selectedId={tab?.id} onSelect={select} panelId={PANEL_ID} />

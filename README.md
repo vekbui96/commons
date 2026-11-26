@@ -179,6 +179,14 @@ A finished app is reused only as a published runtime embed: a web component at
 a versioned URL such as `embed/v1.js`, loaded live. No embed exists yet; the rule
 is recorded so nobody imports another app's source in the meantime.
 
+## Visitor profiles
+
+On the public site a guest sees only the apps in `src/profiles/profiles.json`
+(an allowlist: a new public app stays hidden until it is listed there). Tap the
+avatar ("Guest") and type a first name, or open `?profile=<name>`, to see that
+visitor's apps. Tailoring only, never access control; the private build ignores
+it. Details: [`src/profiles/CLAUDE.md`](src/profiles/CLAUDE.md).
+
 ## Homepage tabs
 
 The chips under the top bar come from a registry like the apps: one file per

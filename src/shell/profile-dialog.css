@@ -1,0 +1,64 @@
+/* "Who's visiting?" dialog (src/shell/ProfileDialog.tsx). Tokens only. */
+
+.profile-dialog {
+  width: min(100% - 2 * var(--gutter), 26rem);
+  max-height: calc(100dvh - 2 * var(--gutter));
+  margin: auto;
+  padding: 0;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-raised);
+}
+
+.profile-dialog::backdrop {
+  background: var(--scrim);
+}
+
+/* Padding lives here so a click on the <dialog> itself means the backdrop. */
+.profile-dialog__body {
+  padding: var(--space-6) var(--space-5) var(--space-5);
+}
+
+.profile-dialog__form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.profile-dialog__title {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+}
+
+.profile-dialog__text {
+  margin: var(--space-2) 0 var(--space-5);
+  color: var(--text-muted);
+}
+
+/* Quiet: the same voice as a field hint. Empty until a name is not found. */
+.profile-dialog__note {
+  margin: 0;
+  min-height: 1lh;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.profile-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.profile-dialog__actions .ui-button {
+  flex: 1 1 8rem;
+}
+
+@media (forced-colors: active) {
+  .profile-dialog {
+    border-color: CanvasText;
+  }
+}
