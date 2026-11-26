@@ -64,7 +64,7 @@ interface CountOptions {
   signal?: AbortSignal;    // cancels the request (the promise rejects)
 }
 interface Count {
-  needsYou: number;        // the same number as ops-hub:count: Needs you items only, never proposals
+  needsYou: number;        // the same number as ops-hub:count: Needs you items only, never proposals or auto-approving items
   stale: boolean;
 }
 ```
@@ -104,7 +104,7 @@ Both bubble and are `composed` (they cross the shadow boundary).
 
 | Event | `detail` | When |
 | --- | --- | --- |
-| `ops-hub:count` | `{ needsYou: number, stale: boolean }` | After the first load, then whenever either value changes. `needsYou` counts **Needs you items only**, never proposals (Ve's decision 7). The tab badge is hidden at 0, with no push and no sound. |
+| `ops-hub:count` | `{ needsYou: number, stale: boolean }` | After the first load, then whenever either value changes. `needsYou` counts **Needs you items only**, never proposals (Ve's decision 7) and never auto-approving items (via-policy veto or merge countdowns, shown calmly under Approvals with Hold). The tab badge is hidden at 0, with no push and no sound. |
 | `ops-hub:error` | `{ error: unknown }` | A render or handler threw. The same error goes to `onError`. |
 
 ## What the element calls
