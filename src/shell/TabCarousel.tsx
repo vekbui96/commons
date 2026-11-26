@@ -10,6 +10,13 @@ export interface TabCarouselProps {
   onSelect: (tab: SelectableTab) => void;
   /** Id of the tabpanel the selected tab controls. */
   panelId: string;
+  /** Counts by tab id (e.g. Ops: "Needs you" items). Hidden at 0. */
+  badges?: Readonly<Record<string, number>>;
+}
+
+/** "3 need you" for screen readers; the chip shows the number. */
+export function badgeLabel(count: number): string {
+  return `${count} ${count === 1 ? "needs" : "need"} you`;
 }
 
 function prefersReducedMotion(): boolean {
@@ -31,7 +38,7 @@ interface Overflow {
  * and ‹ › buttons on pointer devices. Keyboard: arrows/Home/End move between
  * chips, Enter or Space selects (WAI-ARIA tabs, manual activation).
  */
-export function TabCarousel({ tabs, selectedId, onSelect, panelId }: TabCarouselProps) {
+export function TabCarousel({ tabs, selectedId, onSelect, panelId, badges = {} }: TabCarouselProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const chipRefs = useRef<(HTMLElement | null)[]>([]);
   const selectedIndex = Math.max(
@@ -160,6 +167,8 @@ export function TabCarousel({ tabs, selectedId, onSelect, panelId }: TabCarousel
       <div className="tabs__list" role="tablist" aria-label="Sections" ref={listRef} onKeyDown={onKeyDown}>
         {tabs.map((tab, i) => {
           const selected = isSelectable(tab) && tab.id === selectedId;
+          const count = badges[tab.id] ?? 0;
+          const name = count > 0 ? `${tab.label}, ${badgeLabel(count)}` : tab.label;
           const common = {
             ref: (el: HTMLElement | null) => {
               chipRefs.current[i] = el;
@@ -169,14 +178,19 @@ export function TabCarousel({ tabs, selectedId, onSelect, panelId }: TabCarousel
             className: `tab-chip${selected ? " is-selected" : ""}`,
             tabIndex: i === focusIndex ? 0 : -1,
             "aria-selected": selected,
-            "aria-label": selected ? undefined : tab.label,
-            title: selected ? undefined : tab.label,
+            "aria-label": selected && count === 0 ? undefined : name,
+            title: selected ? undefined : name,
             onFocus: () => setFocusIndex(i),
           } as const;
           const body = (
             <>
               <TabIcon name={tab.icon} />
               {selected && <span className="tab-chip__label">{tab.label}</span>}
+              {count > 0 && (
+                <span className="tab-chip__badge num" aria-hidden="true" data-testid={`badge-${tab.id}`}>
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}{" "}
             </>
           );
 

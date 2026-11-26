@@ -179,6 +179,48 @@ button.site-avatar {
   flex: none;
 }
 
+/* A count on a chip (Ops: "Needs you" items). Quiet: accent, no motion.
+   Inside the chip's box, because the scrolling row clips anything outside. */
+.tab-chip {
+  position: relative;
+}
+
+.tab-chip__badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding-inline: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: calc(var(--text-sm) * 0.8);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+/* On the selected pill it sits after the label. */
+.tab-chip.is-selected .tab-chip__badge {
+  position: static;
+  margin-inline-start: calc(-1 * var(--space-1));
+}
+
+/* A panel tab that threw (PanelErrorBoundary). */
+.panel-error {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+.panel-error__text {
+  margin: 0;
+  color: var(--text-muted);
+}
+
 /* ‹ › buttons: only with a mouse, and only while the row overflows. */
 .tabs__arrow {
   display: none;
@@ -312,6 +354,11 @@ button.site-avatar {
     background: Highlight;
     color: HighlightText;
     border-color: Highlight;
+  }
+  .tab-chip__badge {
+    forced-color-adjust: none;
+    background: CanvasText;
+    color: Canvas;
   }
   .tabs__arrow:disabled {
     color: GrayText;

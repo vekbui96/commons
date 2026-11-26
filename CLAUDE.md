@@ -20,6 +20,7 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
 
 - `README.md`: architecture, style system, adding an app, local dev.
 - `docs/api-contract.md`: the contract with the API (identical in both repos).
+- `docs/ops-hub-contract.md`: the contract with the ops hub micro-frontend (Ops tab; identical in `D:\hub`).
 - `src/apps/<id>/CLAUDE.md`: one per internal app (what it does, files, its rules,
   how to test it). Read the one for the app you are changing.
 - `docs/templates/app-CLAUDE.md`: the template for a new app's CLAUDE.md.
@@ -44,14 +45,22 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   anyway. ESLint enforces it (`commons/app-boundaries`, `eslint/app-boundaries.js`).
 - **Adding a homepage tab = one file.** `src/tabs/defs/<id>.ts` with
   `defineTab({...})`: kind `apps` (apps by visibility), `link` (a URL), `page`
-  (one internal app in the tab) or `panel` (a lazy shell-level view, e.g. Profiles). E.g. an Ops hub tab is one `link` entry with
-  `visibility: "private"` (its URL a same-origin path, never a `*.ts.net` host).
+  (one internal app in the tab) or `panel` (a lazy shell-level view, e.g. Profiles
+  or Ops). Panel views sit inside `PanelErrorBoundary`; a panel may report a chip
+  count with `setTabBadge` (`src/shell/tabBadges.ts`, hidden at 0).
   Private tabs are cut from the public bundle like private apps. Routes:
   `#/` (default tab), `#/tab/<id>`, `#/apps/<id>`.
 - **All API calls go through `src/api/client.ts`**. Private build: same origin
   (`/api/...`). Public build: `VITE_COMMONS_API`, unset (no backend, `hasApi()`
   false) until Ve asks for optional private features there. No `fetch` to the API
   anywhere else. Writes use `sendJson` (CSRF token from `/api/session`).
+- **The Ops tab** (private, `src/shell/ops/`) is the ops hub, not a Commons app:
+  it imports the hub's live build from `/ops/embed/v1.js` on the same origin and
+  mounts `<ops-hub>`. The hub's own requests go to `/ops/api` (its action server),
+  outside the `client.ts` rule. Contract: `docs/ops-hub-contract.md`, identical in
+  `D:\hub\docs\` (change it only by agreement with the hub). URLs come from
+  `location.origin`, never a host. `/ops` is served by the hub's `tailscale serve`
+  handlers on :8445; the Commons deploy never touches them.
 - **Reachable is not configured.** The API answers only on the tailnet. Wrap API
   features in `<NeedsApi>` (or `useApi()`: `checking | reachable | unreachable`);
   unreachable shows a quiet "Connect to Tailscale to use this", never an error.

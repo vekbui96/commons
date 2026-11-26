@@ -211,25 +211,37 @@ tab, `src/tabs/defs/<id>.ts`, default-exporting `defineTab({...})`:
 - `panel` renders a lazy shell-level view (`load: () => import(...)`), for
   views that need the registry or profiles, which apps may not import.
 - Today: **Public** (public apps, the only tab on Pages, the default),
-  **Private** (private apps) and **Profiles** (the visitor-profiles editor),
-  the last two private build only.
+  **Private** (private apps), **Ops** (the ops hub) and **Profiles** (the
+  visitor-profiles editor), the last three private build only.
 - Private tabs are cut out of the public bundle the same way as private apps
   (`excludePrivateTabs` in `build/target.ts`), and `check-dist` looks for their
   files (`defs/<id>.ts`) in `dist/`.
+- Panel views sit inside `PanelErrorBoundary` (one broken tab never blanks the
+  page). A panel can put a count on its chip with `setTabBadge(tabId, n)`
+  (`src/shell/tabBadges.ts`); it is hidden at 0.
 
-Example: adding an Ops hub tab is one entry, `src/tabs/defs/ops.ts` (not added):
+### The Ops tab
 
-```ts
-export default defineTab({
-  id: "ops",
-  label: "Ops hub",
-  icon: "link",
-  kind: "link",
-  url: "/ops/", // a same-origin path; never a *.ts.net host: the source is public
-  order: 30,
-  visibility: "private",
-});
-```
+`src/tabs/defs/ops.ts` is a panel tab whose view, `src/shell/ops/OpsPanel.tsx`,
+imports the ops hub's live build from `/ops/embed/v1.js?t=<minute>` on the same
+origin and mounts its `<ops-hub>` element (`apiBase: "/ops/api"`, `embedded`).
+The hub (`vekbui96/ops-hub`, private) builds and deploys on its own; on :8445 its
+`tailscale serve` handlers serve `/ops/` and `/ops/api`. The contract is
+`docs/ops-hub-contract.md` (identical in the hub repo). URLs are paths resolved
+against `location.origin`, never a host: the source is public.
+
+- States: a loading skeleton; "The ops hub isn't answering." (the import or
+  `GET /ops/api/healthz` fails within about 4 s) with Retry and a link to the
+  standalone page at `/ops/`; a crash state (mount throws or the element reports
+  `onError`).
+- The chip badge counts the hub's **Needs you** items (`ops-hub:count`), hidden
+  at 0, no sound or push. It is the last count this page saw.
+- Theme: the element inherits the tokens through its shadow DOM; the panel also
+  calls `setTheme` when `data-theme` or forced colours change.
+- Dev: `COMMONS_OPS_TARGET` / `COMMONS_OPS_API_TARGET` proxy `/ops` and
+  `/ops/api` (see `vite.config.ts`); unset, the tab says the hub isn't answering.
+- `check-dist public` fails on `shell/ops/OpsPanel`, `/ops/embed/`, `/ops/api`,
+  `.ts.net` or `:8444` in `dist/`; `check-dist private` requires the first three.
 
 ## Checks
 

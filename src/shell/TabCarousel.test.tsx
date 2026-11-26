@@ -151,6 +151,31 @@ describe("tab carousel", () => {
   });
 });
 
+describe("tab badges", () => {
+  const two = many.slice(0, 2);
+  const show = (badges: Record<string, number>, selectedId = "t0") =>
+    render(
+      <TabCarousel tabs={two} selectedId={selectedId} onSelect={() => {}} panelId="p" badges={badges} />,
+    );
+
+  it("shows a count on a chip and names it for screen readers", () => {
+    show({ t1: 3 });
+    expect(screen.getByTestId("badge-t1")).toHaveTextContent("3");
+    expect(screen.getByRole("tab", { name: "Tab 1, 3 need you" })).toBeInTheDocument();
+  });
+
+  it("names the count on the selected chip too, singular for one", () => {
+    show({ t0: 1 });
+    expect(screen.getByRole("tab", { selected: true })).toHaveAccessibleName("Tab 0, 1 needs you");
+  });
+
+  it("is hidden at 0 and capped at 99+", () => {
+    show({ t0: 0, t1: 120 });
+    expect(screen.queryByTestId("badge-t0")).not.toBeInTheDocument();
+    expect(screen.getByTestId("badge-t1")).toHaveTextContent("99+");
+  });
+});
+
 describe("site avatar", () => {
   it("says Private on the private build and Guest on the public one", () => {
     const { rerender } = render(<SiteAvatar privateSite />);

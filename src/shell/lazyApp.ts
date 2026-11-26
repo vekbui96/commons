@@ -31,3 +31,8 @@ export function lazyPanel(
   }
   return component;
 }
+
+/** Drops a panel's cached lazy component, so a retry imports its chunk again. */
+export function forgetPanel(load: () => Promise<{ default: ComponentType }>): void {
+  panelCache.delete(load);
+}

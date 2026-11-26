@@ -5,7 +5,9 @@ import { appsForTab, availableTabs, resolveTab, tabPath, type SelectableTab } fr
 import type { AppsTab, PageTab, PanelTab, TabDefinition } from "@/tabs/types";
 import { useProfile } from "@/profiles/useProfile";
 import { ListRow, ThemeToggle } from "@/ui";
-import { lazyFor, lazyPanel } from "./lazyApp";
+import { forgetPanel, lazyFor, lazyPanel } from "./lazyApp";
+import { PanelErrorBoundary } from "./PanelErrorBoundary";
+import { useTabBadges } from "./tabBadges";
 import { fromTab, tabDomId } from "./navState";
 import { ProfileAvatar } from "./SiteAvatar";
 import { TabCarousel } from "./TabCarousel";
@@ -58,6 +60,7 @@ export function Home({ apps: allApps = BUILD_APPS, tabs: allTabs = BUILD_TABS }:
   const { tabId } = useParams();
   const navigate = useNavigate();
   const scrolled = useScrolled();
+  const badges = useTabBadges();
   const tab = resolveTab(tabId, tabs);
   const here = tab ? tabPath(tab.id, tabs) : "/";
 
@@ -89,7 +92,13 @@ export function Home({ apps: allApps = BUILD_APPS, tabs: allTabs = BUILD_TABS }:
             <ProfileAvatar />
           </div>
           {tabs.length > 0 && (
-            <TabCarousel tabs={tabs} selectedId={tab?.id} onSelect={select} panelId={PANEL_ID} />
+            <TabCarousel
+              tabs={tabs}
+              selectedId={tab?.id}
+              onSelect={select}
+              panelId={PANEL_ID}
+              badges={badges}
+            />
           )}
         </div>
       </header>
@@ -108,7 +117,7 @@ export function Home({ apps: allApps = BUILD_APPS, tabs: allTabs = BUILD_TABS }:
             ) : tab.kind === "page" ? (
               <PagePanel tab={tab} />
             ) : (
-              <ViewPanel tab={tab} />
+              <ViewPanel key={tab.id} tab={tab} />
             )}
           </section>
         ) : (
@@ -179,14 +188,22 @@ function PagePanel({ tab }: { tab: PageTab }) {
   );
 }
 
+/** A panel tab's view, behind an error boundary so one broken tab never blanks the page. */
 function ViewPanel({ tab }: { tab: PanelTab }) {
-  const Component = lazyPanel(tab.load);
   return (
     <>
       <h2 className="visually-hidden">{tab.label}</h2>
-      <Suspense fallback={<p className="loading">Loading…</p>}>
-        <Component />
-      </Suspense>
+      <PanelErrorBoundary onReset={() => forgetPanel(tab.load)}>
+        <Suspense fallback={<p className="loading">Loading…</p>}>
+          <PanelView load={tab.load} />
+        </Suspense>
+      </PanelErrorBoundary>
     </>
   );
+}
+
+// Looked up at render, so a retry after forgetPanel imports the chunk again.
+function PanelView({ load }: { load: PanelTab["load"] }) {
+  const Component = lazyPanel(load);
+  return <Component />;
 }

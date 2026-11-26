@@ -35,6 +35,7 @@ const PATHS = {
       <path d="M13.5 3.5v4h4M9.5 12.5h5M9.5 16h5" />
     </>
   ),
+  pulse: <path d="M3.5 12h4l2.5-6 4 12 2.5-6h4" />,
   people: (
     <>
       <circle cx="9" cy="8.5" r="3.25" />

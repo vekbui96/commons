@@ -46,7 +46,15 @@ const privateTabs = privateTabIds(TAB_DEFS).map((id) => ({
   needles: [`defs/${id}.ts`],
 }));
 
-const items = [...privateApps, ...privateTabs];
+// The Ops tab (src/shell/ops/) mounts the ops hub from paths on the private
+// origin. Its module and those paths belong to the private build only.
+const opsHub = [
+  { what: "Ops panel (shell/ops/OpsPanel)", needles: ["shell/ops/OpsPanel"] },
+  { what: "ops hub loader path (/ops/embed/)", needles: ["/ops/embed/"] },
+  { what: "ops hub API path (/ops/api)", needles: ["/ops/api"] },
+];
+
+const items = [...privateApps, ...privateTabs, ...opsHub];
 if (items.length === 0) {
   console.log(`check-dist (${target}): no private apps or tabs in src/; nothing to check.`);
   process.exit(0);
@@ -62,6 +70,17 @@ for (const item of items) {
   }
   if (target === "private" && hits.length === 0) {
     problems.push(`private ${item.what} is missing from the private build`);
+  }
+}
+
+// Public only: no tailnet host and no hub dashboard port anywhere in dist/.
+if (target === "public") {
+  for (const [label, pattern] of [
+    ["a tailnet host (.ts.net)", /\.ts\.net/],
+    ["the ops hub port (:8444)", /:8444\b/],
+  ]) {
+    const hits = contents.filter(({ text }) => pattern.test(text)).map(({ file }) => file);
+    if (hits.length > 0) problems.push(`${label} in the public build:\n  ${hits.join("\n  ")}`);
   }
 }
 

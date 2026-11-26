@@ -69,10 +69,11 @@ describe("private tab exclusion", () => {
     expect(source).toContain(TAB_EXCLUDE_PLACEHOLDER);
   });
 
-  it("excludes the real Private and Profiles tabs and keeps the Public one", () => {
+  it("excludes the real Private, Ops and Profiles tabs and keeps the Public one", () => {
     const ids = privateTabIds(join(process.cwd(), "src", "tabs", "defs"));
     expect(ids).toContain("private");
     expect(ids).toContain("profiles");
+    expect(ids).toContain("ops");
     expect(ids).not.toContain("public");
   });
 });

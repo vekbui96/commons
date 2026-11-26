@@ -105,6 +105,53 @@ describe("design tokens", () => {
     }
   });
 
+  // docs/ops-hub-contract.md "Token roles": the ops hub's CSS uses only these,
+  // inherited into its shadow DOM. Renaming one breaks the Ops tab.
+  it("defines every role the ops hub uses, in light and dark", () => {
+    const colours = [
+      "--bg",
+      "--surface",
+      "--surface-2",
+      "--text",
+      "--text-muted",
+      "--line",
+      "--line-strong",
+      "--accent",
+      "--accent-soft",
+      "--ok",
+      "--ok-bg",
+      "--warn",
+      "--warn-bg",
+      "--danger",
+      "--danger-bg",
+      "--focus",
+    ];
+    for (const role of colours) {
+      expect(light.has(role), `${role} (light)`).toBe(true);
+      expect(dark.has(role), `${role} (dark)`).toBe(true);
+    }
+    const scales = [
+      "--space-1",
+      "--space-24",
+      "--text-sm",
+      "--text-base",
+      "--text-md",
+      "--text-lg",
+      "--text-xl",
+      "--text-2xl",
+      "--text-display",
+      "--radius-sm",
+      "--radius",
+      "--radius-lg",
+      "--radius-full",
+      "--tap",
+      "--font-sans",
+      "--font-display",
+      "--font-mono",
+    ];
+    for (const name of scales) expect(css, name).toMatch(new RegExp(`${name}\\s*:`));
+  });
+
   describe.each([
     ["light", light],
     ["dark", dark],

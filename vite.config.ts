@@ -7,6 +7,13 @@ import { excludePrivateApps, excludePrivateTabs, resolveTarget } from "./build/t
 // only: production calls go through src/api/client.ts with VITE_COMMONS_API.
 const API_TARGET = process.env.VITE_SERVER_TARGET ?? "http://localhost:8790";
 
+// The Ops tab loads the ops hub from /ops/ on its own origin (docs/ops-hub-contract.md).
+// Dev only, both optional: COMMONS_OPS_TARGET serves /ops/ (e.g. a local
+// `npx serve` of the hub's dashboard/dist), COMMONS_OPS_API_TARGET /ops/api.
+// Unset, the tab just says the hub isn't answering. Never a tailnet host here.
+const OPS_TARGET = process.env.COMMONS_OPS_TARGET;
+const OPS_API_TARGET = process.env.COMMONS_OPS_API_TARGET;
+
 // COMMONS_TARGET=public|private (default public): see build/target.ts.
 const TARGET = resolveTarget(process.env.COMMONS_TARGET);
 const APPS_DIR = fileURLToPath(new URL("./src/apps", import.meta.url));
@@ -40,6 +47,19 @@ export default defineConfig(({ command, isPreview }) => ({
     strictPort: true,
     proxy: {
       "/api": { target: API_TARGET, changeOrigin: true },
+      // More specific first: /ops/api before /ops.
+      ...(OPS_API_TARGET
+        ? {
+            "/ops/api": {
+              target: OPS_API_TARGET,
+              changeOrigin: true,
+              rewrite: (p: string) => p.slice(8) || "/",
+            },
+          }
+        : {}),
+      ...(OPS_TARGET
+        ? { "/ops": { target: OPS_TARGET, changeOrigin: true, rewrite: (p: string) => p.slice(4) || "/" } }
+        : {}),
     },
   },
   build: {
