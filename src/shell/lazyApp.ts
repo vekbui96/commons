@@ -14,3 +14,20 @@ export function lazyFor(app: RegisteredApp): LazyExoticComponent<ComponentType> 
   }
   return component;
 }
+
+// The same for panel tabs, keyed by the tab's loader.
+const panelCache = new WeakMap<
+  () => Promise<{ default: ComponentType }>,
+  LazyExoticComponent<ComponentType>
+>();
+
+export function lazyPanel(
+  load: () => Promise<{ default: ComponentType }>,
+): LazyExoticComponent<ComponentType> {
+  let component = panelCache.get(load);
+  if (!component) {
+    component = lazy(load);
+    panelCache.set(load, component);
+  }
+  return component;
+}

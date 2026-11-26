@@ -245,4 +245,11 @@ describe("homepage tabs (private site)", () => {
     // No app bar inside a tab.
     expect(screen.getAllByRole("link", { name: "Commons" })).toHaveLength(1);
   });
+
+  it("shows the Profiles editor as a tab on the private site", async () => {
+    renderSite("/tab/profiles", privateTabs);
+    expect(selectedTab()).toHaveAccessibleName("Profiles");
+    // The editor needs the API; with none in tests it asks for Tailscale.
+    expect(await screen.findByTestId("needs-api")).toHaveTextContent("Connect to Tailscale");
+  });
 });

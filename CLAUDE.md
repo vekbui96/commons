@@ -24,7 +24,7 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   how to test it). Read the one for the app you are changing.
 - `docs/templates/app-CLAUDE.md`: the template for a new app's CLAUDE.md.
 - `src/tabs/CLAUDE.md`: the homepage tabs (the chips under the top bar).
-- `src/profiles/CLAUDE.md`: visitor profiles (public build: which public apps a guest or a named visitor sees; `profiles.json` is the allowlist). Tailoring, never access control.
+- `src/profiles/CLAUDE.md`: visitor profiles (public build: which public apps a guest or a named visitor sees, from the published `commons-profiles` file; private build: the Profiles tab editor). Tailoring, never access control.
 
 ## Rules
 
@@ -43,8 +43,8 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   `embed/v1.js`, loaded live). That embed does not exist yet; the rule stands
   anyway. ESLint enforces it (`commons/app-boundaries`, `eslint/app-boundaries.js`).
 - **Adding a homepage tab = one file.** `src/tabs/defs/<id>.ts` with
-  `defineTab({...})`: kind `apps` (apps by visibility), `link` (a URL) or `page`
-  (one internal app in the tab). E.g. an Ops hub tab is one `link` entry with
+  `defineTab({...})`: kind `apps` (apps by visibility), `link` (a URL), `page`
+  (one internal app in the tab) or `panel` (a lazy shell-level view, e.g. Profiles). E.g. an Ops hub tab is one `link` entry with
   `visibility: "private"` (its URL a same-origin path, never a `*.ts.net` host).
   Private tabs are cut from the public bundle like private apps. Routes:
   `#/` (default tab), `#/tab/<id>`, `#/apps/<id>`.

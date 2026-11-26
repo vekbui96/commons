@@ -1,0 +1,444 @@
+/* The Profiles tab (private build). Semantic roles and scale tokens only. */
+
+.pe {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.pe-state,
+.pe-muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.pe-state {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+
+.pe-state p {
+  margin: 0;
+}
+
+/* ---------- Publish strip (the one surface on the page) ---------- */
+
+.pe-publish {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.pe-publish__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.pe-publish__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+
+.pe-publish__fallback {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+
+.pe-publish__fallback .ui-button {
+  text-decoration: none;
+}
+
+/* A status word with a dot; the word carries the meaning, the dot only helps. */
+.pe-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pe-dot::before {
+  content: "";
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.pe-dot--warn::before {
+  background: var(--warn);
+}
+
+.pe-dot--ok::before {
+  background: var(--ok);
+}
+
+.pe-note {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.pe-note p {
+  margin: 0;
+}
+
+.pe-note--ok {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.pe-note--danger {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.pe-problems {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}
+
+/* ---------- Sections and the list ---------- */
+
+.pe-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.pe-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.pe-heading {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pe-heading .num {
+  letter-spacing: 0;
+}
+
+.pe-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--hairline) solid var(--line);
+}
+
+.pe-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
+  border-bottom: var(--hairline) solid var(--line);
+}
+
+.pe-row__text {
+  flex: 1 1 12rem;
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.pe-row__title {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+}
+
+.pe-row__desc {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.pe-row__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------- Tiles (view as, effective apps) ---------- */
+
+.pe-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--space-2);
+}
+
+.pe-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap);
+  padding: var(--space-2);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius);
+}
+
+.pe-tile__name {
+  min-width: 0;
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Forms ---------- */
+
+.pe-form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.pe-form__head {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.pe-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding-inline: var(--space-2);
+  margin-inline-start: calc(-1 * var(--space-2));
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pe-form__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+}
+
+.pe-form__title:focus {
+  outline: none;
+}
+
+.pe-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.pe-link .num {
+  overflow-wrap: anywhere;
+}
+
+.pe-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.pe-legend {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.pe-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--hairline) solid var(--line);
+}
+
+.pe-checks li {
+  border-bottom: var(--hairline) solid var(--line);
+}
+
+.pe-check,
+.pe-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap);
+  padding-block: var(--space-2);
+  cursor: pointer;
+}
+
+.pe-check input {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.pe-check__text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.pe-check__name {
+  font-weight: var(--weight-semibold);
+}
+
+.pe-check__desc {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* The "Includes guest apps" switch: a native checkbox drawn as a track. */
+.pe-switch__control {
+  appearance: none;
+  flex-shrink: 0;
+  position: relative;
+  width: 3rem;
+  height: 1.75rem;
+  margin: 0;
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.pe-switch__control::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0.1875rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+  transform: translateY(-50%);
+  transition:
+    inset-inline-start var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
+}
+
+.pe-switch__control:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.pe-switch__control:checked::after {
+  inset-inline-start: calc(100% - 1.4375rem);
+  background: var(--on-accent);
+}
+
+.pe-switch__control:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.pe-effective {
+  display: grid;
+  gap: 0;
+}
+
+.pe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.pe-actions__end {
+  margin-inline-start: auto;
+}
+
+.pe-confirm {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--hairline) solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+}
+
+.pe-confirm p {
+  margin: 0;
+}
+
+/* Inside the publish panel a note is a tint, not a second box (no cards in cards). */
+.pe-publish .pe-note {
+  border-color: transparent;
+}
+
+@media (hover: hover) {
+  .pe-back:hover {
+    color: var(--text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pe-switch__control,
+  .pe-switch__control::after {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .pe-publish,
+  .pe-tile,
+  .pe-confirm {
+    border-color: CanvasText;
+  }
+
+  .pe-note,
+  .pe-publish .pe-note {
+    border-color: CanvasText;
+  }
+
+  .pe-switch__control {
+    border-color: ButtonText;
+    background: Canvas;
+  }
+
+  .pe-switch__control::after {
+    background: ButtonText;
+  }
+
+  .pe-switch__control:checked {
+    border-color: Highlight;
+    background: Highlight;
+  }
+
+  .pe-switch__control:checked::after {
+    background: HighlightText;
+  }
+
+  .pe-dot::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}

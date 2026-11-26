@@ -1,6 +1,6 @@
 import { SITE_TARGET, type SiteTarget } from "@/site";
 import { listedApps, type RegisteredApp } from "@/registry/registry";
-import type { AppsTab, LinkTab, PageTab, TabDefinition } from "./types";
+import type { AppsTab, LinkTab, PageTab, PanelTab, TabDefinition } from "./types";
 
 /**
  * The tab registry, discovered at build time like the app registry. Adding a
@@ -26,11 +26,11 @@ export const tabRegistry: readonly RegisteredTab[] = Object.entries(tabModules).
   tab: mod.default,
 }));
 
-/** Tabs a user can select (an apps list or a page). Link tabs only open their URL. */
-export type SelectableTab = AppsTab | PageTab;
+/** Tabs a user can select (an apps list, a page or a panel). Link tabs only open their URL. */
+export type SelectableTab = AppsTab | PageTab | PanelTab;
 
 export function isSelectable(tab: TabDefinition): tab is SelectableTab {
-  return tab.kind === "apps" || tab.kind === "page";
+  return tab.kind === "apps" || tab.kind === "page" || tab.kind === "panel";
 }
 
 /** Tabs on this site, in carousel order (order, then label). */

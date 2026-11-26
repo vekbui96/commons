@@ -35,6 +35,13 @@ const PATHS = {
       <path d="M13.5 3.5v4h4M9.5 12.5h5M9.5 16h5" />
     </>
   ),
+  people: (
+    <>
+      <circle cx="9" cy="8.5" r="3.25" />
+      <path d="M3.5 19.5c.6-3.2 2.7-5 5.5-5s4.9 1.8 5.5 5" />
+      <path d="M15.5 5.6a3.25 3.25 0 0 1 0 5.8M17.5 14.9c1.6.7 2.7 2.3 3 4.6" />
+    </>
+  ),
 } satisfies Record<string, ReactElement>;
 
 export type TabIconName = keyof typeof PATHS;

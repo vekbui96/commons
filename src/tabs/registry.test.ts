@@ -52,8 +52,8 @@ const secretApp: RegisteredApp = {
 };
 
 describe("tab registry", () => {
-  it("discovers the Public and Private tabs", () => {
-    expect(tabRegistry.map((t) => t.tab.id).sort()).toEqual(["private", "public"]);
+  it("discovers the Public, Private and Profiles tabs", () => {
+    expect(tabRegistry.map((t) => t.tab.id).sort()).toEqual(["private", "profiles", "public"]);
   });
 
   it.each(tabRegistry.map((t) => [t.file, t] as const))("tabs/defs/%s.ts is valid", (file, { tab }) => {
@@ -76,14 +76,21 @@ describe("tab registry", () => {
     },
   );
 
-  it("shows only the Public tab on the public site, both on the private site, Public first", () => {
+  it("shows only the Public tab on the public site, all on the private site, Public first", () => {
     expect(availableTabs(tabRegistry, "public").map((t) => t.id)).toEqual(["public"]);
-    expect(availableTabs(tabRegistry, "private").map((t) => t.id)).toEqual(["public", "private"]);
+    expect(availableTabs(tabRegistry, "private").map((t) => t.id)).toEqual(["public", "private", "profiles"]);
   });
 
   it("sorts by order, then label", () => {
     const tabs = availableTabs(all([page, link, inSite]), "private");
-    expect(tabs.map((t) => t.id)).toEqual(["hub", "public", "private", "units-link", "units-page"]);
+    expect(tabs.map((t) => t.id)).toEqual([
+      "hub",
+      "public",
+      "private",
+      "units-link",
+      "profiles",
+      "units-page",
+    ]);
   });
 
   it("defaults to the first selectable tab, skipping links", () => {
@@ -151,6 +158,24 @@ describe("page tabs", () => {
 
   it("are selectable", () => {
     expect(resolveTab("units-page", [page])?.id).toBe("units-page");
+  });
+});
+
+describe("panel tabs", () => {
+  const panel = defineTab({
+    id: "view",
+    label: "View",
+    icon: "people",
+    kind: "panel",
+    load: () => Promise.resolve({ default: () => null }),
+    order: 50,
+    visibility: "private",
+  });
+
+  it("need a loader and are selectable", () => {
+    expect(validateTab(panel, "view", registry)).toEqual([]);
+    expect(validateTab({ ...panel, load: "x" }, "view", registry)).toHaveLength(1);
+    expect(resolveTab("view", [panel])?.id).toBe("view");
   });
 });
 

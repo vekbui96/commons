@@ -66,8 +66,12 @@ export function validateTab(tab: unknown, file: string, apps: readonly Registere
     } else if (app.manifest.visibility === "private" && t.visibility === "public") {
       errors.push(`${where}: a public tab cannot show the private app "${app.manifest.id}"`);
     }
+  } else if (t.kind === "panel") {
+    if (typeof t.load !== "function") {
+      errors.push(`${where}: load must be a function returning import("...") of a view`);
+    }
   } else {
-    errors.push(`${where}: kind must be "apps", "link" or "page"`);
+    errors.push(`${where}: kind must be "apps", "link", "page" or "panel"`);
   }
   return errors;
 }

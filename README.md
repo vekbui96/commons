@@ -181,8 +181,11 @@ is recorded so nobody imports another app's source in the meantime.
 
 ## Visitor profiles
 
-On the public site a guest sees only the apps in `src/profiles/profiles.json`
-(an allowlist: a new public app stays hidden until it is listed there). Tap the
+On the public site a guest sees only the apps the published profiles file
+allows (`https://vekbui96.github.io/commons-profiles/profiles.json`, fetched at
+runtime; the bundled `src/profiles/profiles.json` is the fallback). It is an
+allowlist: a new public app stays hidden until it is listed. Ve edits and
+publishes it from the **Profiles** tab on the private site. Tap the
 avatar ("Guest") and type a first name, or open `?profile=<name>`, to see that
 visitor's apps. Tailoring only, never access control; the private build ignores
 it. Details: [`src/profiles/CLAUDE.md`](src/profiles/CLAUDE.md).
@@ -192,21 +195,24 @@ it. Details: [`src/profiles/CLAUDE.md`](src/profiles/CLAUDE.md).
 The chips under the top bar come from a registry like the apps: one file per
 tab, `src/tabs/defs/<id>.ts`, default-exporting `defineTab({...})`:
 
-| Field        | Meaning                                                                |
-| ------------ | ---------------------------------------------------------------------- |
-| `id`         | kebab-case, equal to the file name; the URL is `#/tab/<id>`            |
-| `label`      | shown on the selected chip; tooltip and accessible name otherwise      |
-| `icon`       | an inline SVG from `src/tabs/icons.tsx` (`globe`, `grid`, `lock`, ...) |
-| `visibility` | `public` or `private` (a plain literal, the file's only `visibility:`) |
-| `order`      | carousel position; the lowest non-link tab is the default (`#/`)       |
-| `kind`       | `apps` (`filter.appVisibility`), `link` (`url`) or `page` (`app` id)   |
+| Field        | Meaning                                                                                |
+| ------------ | -------------------------------------------------------------------------------------- |
+| `id`         | kebab-case, equal to the file name; the URL is `#/tab/<id>`                            |
+| `label`      | shown on the selected chip; tooltip and accessible name otherwise                      |
+| `icon`       | an inline SVG from `src/tabs/icons.tsx` (`globe`, `grid`, `lock`, ...)                 |
+| `visibility` | `public` or `private` (a plain literal, the file's only `visibility:`)                 |
+| `order`      | carousel position; the lowest non-link tab is the default (`#/`)                       |
+| `kind`       | `apps` (`filter.appVisibility`), `link` (`url`), `page` (`app` id) or `panel` (`load`) |
 
 - `apps` lists the apps matching its filter. `link` opens its URL like an
   external app (https in a new tab; `#/...` or a same-origin `/path` in this
   one) and is never "selected". `page` renders one internal app in the tab,
   without the app bar.
-- Today: **Public** (public apps, the only tab on Pages, the default) and
-  **Private** (private apps, private build only).
+- `panel` renders a lazy shell-level view (`load: () => import(...)`), for
+  views that need the registry or profiles, which apps may not import.
+- Today: **Public** (public apps, the only tab on Pages, the default),
+  **Private** (private apps) and **Profiles** (the visitor-profiles editor),
+  the last two private build only.
 - Private tabs are cut out of the public bundle the same way as private apps
   (`excludePrivateTabs` in `build/target.ts`), and `check-dist` looks for their
   files (`defs/<id>.ts`) in `dist/`.

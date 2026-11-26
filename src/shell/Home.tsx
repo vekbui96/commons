@@ -2,10 +2,10 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { findInternalApp, listedApps, appPath, type RegisteredApp } from "@/registry/registry";
 import { appsForTab, availableTabs, resolveTab, tabPath, type SelectableTab } from "@/tabs/registry";
-import type { AppsTab, PageTab, TabDefinition } from "@/tabs/types";
+import type { AppsTab, PageTab, PanelTab, TabDefinition } from "@/tabs/types";
 import { useProfile } from "@/profiles/useProfile";
 import { ListRow, ThemeToggle } from "@/ui";
-import { lazyFor } from "./lazyApp";
+import { lazyFor, lazyPanel } from "./lazyApp";
 import { fromTab, tabDomId } from "./navState";
 import { ProfileAvatar } from "./SiteAvatar";
 import { TabCarousel } from "./TabCarousel";
@@ -105,8 +105,10 @@ export function Home({ apps: allApps = BUILD_APPS, tabs: allTabs = BUILD_TABS }:
           >
             {tab.kind === "apps" ? (
               <AppsPanel tab={tab} apps={appsForTab(tab, apps)} from={here} />
-            ) : (
+            ) : tab.kind === "page" ? (
               <PagePanel tab={tab} />
+            ) : (
+              <ViewPanel tab={tab} />
             )}
           </section>
         ) : (
@@ -167,6 +169,18 @@ function PagePanel({ tab }: { tab: PageTab }) {
   const app = findInternalApp(tab.app);
   const Component = app ? lazyFor(app) : null;
   if (!Component) return <p className="home__empty">Nothing here yet.</p>;
+  return (
+    <>
+      <h2 className="visually-hidden">{tab.label}</h2>
+      <Suspense fallback={<p className="loading">Loading…</p>}>
+        <Component />
+      </Suspense>
+    </>
+  );
+}
+
+function ViewPanel({ tab }: { tab: PanelTab }) {
+  const Component = lazyPanel(tab.load);
   return (
     <>
       <h2 className="visually-hidden">{tab.label}</h2>

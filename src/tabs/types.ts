@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import type { AppVisibility } from "@/registry/types";
 import type { TabIconName } from "./icons";
 
@@ -56,7 +57,18 @@ export interface PageTab extends TabBase {
   app: string;
 }
 
-export type TabDefinition = AppsTab | LinkTab | PageTab;
+/**
+ * Renders a shell-level view inside the tab (not an app: it may use the
+ * registry and src/profiles, which apps may not import). `load` is a dynamic
+ * import, so the view is its own chunk, and a private tab's view never reaches
+ * the public bundle (the def file, and with it the import, is cut out).
+ */
+export interface PanelTab extends TabBase {
+  kind: "panel";
+  load: () => Promise<{ default: ComponentType }>;
+}
+
+export type TabDefinition = AppsTab | LinkTab | PageTab | PanelTab;
 
 /** Identity helper so definitions are type-checked where they are written. */
 export function defineTab<T extends TabDefinition>(tab: T): T {

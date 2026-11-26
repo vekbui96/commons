@@ -12,7 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { listedApps } from "@/registry/registry";
 import { isPrivateSite } from "@/site";
 import { enabledAppIds, filterApps, findProfile, normaliseName } from "./resolve";
-import { loadProfiles } from "./source";
+import { fetchPublishedProfiles, initialProfiles, loadProfiles } from "./source";
 import { clearProfileId, readProfileId, saveProfileId } from "./storage";
 import type { Profile, ProfilesConfig } from "./types";
 
@@ -87,7 +87,7 @@ function withoutParam(search: string): string {
 
 export interface ProfileProviderProps {
   children?: ReactNode;
-  /** Defaults to loadProfiles(). */
+  /** Fixed data (tests). Default: the cached or bundled file first, then the published one. */
   config?: ProfilesConfig;
   /** Whether profiles apply. Default: on the public build only. */
   enabled?: boolean;
@@ -99,7 +99,12 @@ export interface ProfileProviderProps {
  * Holds the visitor's profile (public build only). Reads `?profile=` from the
  * real query string and from the hash route's, then the remembered choice.
  * A known name or "guest" is applied, remembered and removed from the URL; an
- * unknown value is ignored. Must sit inside the router.
+ * unknown value is ignored (and tried again once the published file arrives).
+ * Must sit inside the router.
+ *
+ * Data: it renders at once from the last published file cached on this device
+ * (else the bundled profiles.json), then fetches the published file and
+ * switches to it; a failed fetch keeps what is shown.
  */
 export function ProfileProvider({
   children,
@@ -107,22 +112,38 @@ export function ProfileProvider({
   enabled = !isPrivateSite(),
   available: availableProp,
 }: ProfileProviderProps) {
-  const config = useMemo(() => configProp ?? loadProfiles(), [configProp]);
+  const [loaded, setLoaded] = useState<ProfilesConfig>(() =>
+    configProp ? configProp : enabled ? initialProfiles() : loadProfiles(),
+  );
+  const config = configProp ?? loaded;
   const available = useMemo(() => availableProp ?? availableIds(), [availableProp]);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState<Profile | undefined>(() => {
+  // The published file (public build, no fixed config).
+  useEffect(() => {
+    if (configProp || !enabled) return;
+    let live = true;
+    void fetchPublishedProfiles().then((next) => {
+      if (live && next) setLoaded(next);
+    });
+    return () => {
+      live = false;
+    };
+  }, [configProp, enabled]);
+
+  // The chosen profile's id; the profile itself comes from the current data.
+  const [profileId, setProfileId] = useState<string | undefined>(() => {
     if (!enabled) return undefined;
     // The hash route's query wins over the real one, as in the effect below.
     const wish = wishFrom(config, location.search) ?? wishFrom(config, window.location.search);
-    if (wish) return wish.kind === "profile" ? wish.profile : undefined;
-    const stored = readProfileId();
-    return stored ? config.profiles.find((p) => p.id === stored) : undefined;
+    if (wish) return wish.kind === "profile" ? wish.profile.id : undefined;
+    return readProfileId();
   });
+  const profile = profileId ? config.profiles.find((p) => p.id === profileId) : undefined;
 
   const apply = useCallback((next: Profile | undefined) => {
-    setProfile(next);
+    setProfileId(next?.id);
     if (next) saveProfileId(next.id);
     else clearProfileId();
   }, []);

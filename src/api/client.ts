@@ -74,18 +74,22 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string | undefined,
     url: string,
+    /** The parsed JSON error body, when there was one (e.g. `problems`, `reason`, `revision`). */
+    readonly body: Record<string, unknown> = {},
   ) {
     super(`${status}${code ? ` ${code}` : ""} for ${url}`);
     this.name = "ApiError";
   }
 }
 
-async function errorCode(res: Response): Promise<string | undefined> {
+async function errorBody(res: Response): Promise<Record<string, unknown>> {
   try {
-    const body = (await res.json()) as { error?: unknown };
-    return typeof body.error === "string" ? body.error : undefined;
+    const body: unknown = await res.json();
+    return typeof body === "object" && body !== null && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : {};
   } catch {
-    return undefined;
+    return {};
   }
 }
 
@@ -94,7 +98,10 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { Accept: "application/json", ...init?.headers },
   });
-  if (!res.ok) throw new ApiError(res.status, await errorCode(res), url);
+  if (!res.ok) {
+    const body = await errorBody(res);
+    throw new ApiError(res.status, typeof body.error === "string" ? body.error : undefined, url, body);
+  }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }

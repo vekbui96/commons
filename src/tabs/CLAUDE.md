@@ -2,7 +2,7 @@
 
 The chips under the homepage top bar. One file per tab: `defs/<id>.ts`, default-exporting `defineTab({...})`.
 
-- `types.ts`: `TabDefinition` = `apps` (lists apps by `filter.appVisibility`) | `link` (`url`: https, `#/...` or same-origin `/path`) | `page` (`app`: an internal app id, rendered in the tab).
+- `types.ts`: `TabDefinition` = `apps` (lists apps by `filter.appVisibility`) | `link` (`url`: https, `#/...` or same-origin `/path`) | `page` (`app`: an internal app id, rendered in the tab) | `panel` (`load: () => import("...")`: a shell-level view, e.g. the private Profiles editor in `src/profiles/editor/`; the dynamic import keeps it out of the public bundle with the def).
 - `registry.ts`: glob discovery, `availableTabs`, `defaultTab` (lowest `order` that is not a link), `resolveTab`, `tabPath`.
 - `validate.ts`: rules, checked for every def by `registry.test.ts`. `icons.tsx`: the inline SVGs (`icon` names).
 
