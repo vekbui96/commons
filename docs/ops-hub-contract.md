@@ -44,7 +44,7 @@ handle.unmount();                  // or m.unmount(el); idempotent
 | `define` | `() => void` | Defines `<ops-hub>` once. Safe to call any number of times, and with two copies of the bundle on one page. |
 | `OpsHubElement` | class | The custom element, for type checks. |
 | `TAG` | `'ops-hub'` | |
-| `fetchCount` | `(opts?: CountOptions) => Promise<Count>` | Headless Needs-you count for a badge while the element is **not** mounted. No DOM, no timers, no session or token. One `GET data` (no fallback to `data.json`), run through the element's own model, so it gives exactly the `{ needsYou, stale }` the element would emit in `ops-hub:count`. Rejects on a network error, a non-200 answer, bad JSON or an abort; keep the last badge then. |
+| `fetchCount` | `(opts?: CountOptions) => Promise<Count>` | Headless Needs-you count for a badge while the element is **not** mounted. No DOM, no timers, no session or token. One `GET data` and one `GET feedback`, in parallel (no fallback to `data.json`), run through the element's own model, so it gives exactly the `{ needsYou, stale }` the element would emit in `ops-hub:count`. Rejects on a network error, a non-200 answer, bad JSON or an abort of `GET data`; keep the last badge then. A failed `GET feedback` (an older action server, a 503) just counts no steering suggestions. |
 
 ```ts
 interface MountOptions {
@@ -64,7 +64,8 @@ interface CountOptions {
   signal?: AbortSignal;    // cancels the request (the promise rejects)
 }
 interface Count {
-  needsYou: number;        // the same number as ops-hub:count: Needs you items only, never proposals or auto-approving items
+  needsYou: number;        // the same number as ops-hub:count: Needs you items only (steering suggestions included),
+                           // never proposals, auto-approving items or due ratings
   stale: boolean;
 }
 ```
@@ -76,7 +77,8 @@ const { needsYou, stale } = await m.fetchCount({ apiBase: '/ops/api' });
 ```
 
 - Poll **at most every 5 minutes**, and **only while `document.visibilityState === 'visible'`**: stop on `hidden`,
-  fetch once on `visible` if the last fetch is older than 5 minutes. The read endpoints share one 120-per-minute limit.
+  fetch once on `visible` if the last fetch is older than 5 minutes. The read endpoints (`data`, `proposals`, `feedback`)
+  share one 120-per-minute limit; one `fetchCount` uses two reads.
 - While the Ops tab is mounted, stop polling and use `ops-hub:count` instead (the element polls every 60 s).
 - `/proposals` is not fetched: it holds only the bodies shown on row expand and does not change the count.
 
@@ -104,7 +106,7 @@ Both bubble and are `composed` (they cross the shadow boundary).
 
 | Event | `detail` | When |
 | --- | --- | --- |
-| `ops-hub:count` | `{ needsYou: number, stale: boolean }` | After the first load, then whenever either value changes. `needsYou` counts **Needs you items only**, never proposals (Ve's decision 7) and never auto-approving items (via-policy veto or merge countdowns, shown calmly under Approvals with Hold). The tab badge is hidden at 0, with no push and no sound. |
+| `ops-hub:count` | `{ needsYou: number, stale: boolean }` | After the first load, then whenever either value changes. `needsYou` counts **Needs you items only**, never proposals (Ve's decision 7) and never auto-approving items (via-policy veto or merge countdowns, shown calmly under Approvals with Hold). **Steering suggestions** (from `GET feedback`, Accept / Dismiss) are decisions, so they **are** Needs you items and count. **Due ratings** (the "Rate (N)" list after Needs you) are **not** counted. The tab badge is hidden at 0, with no push and no sound. |
 | `ops-hub:error` | `{ error: unknown }` | A render or handler threw. The same error goes to `onError`. |
 
 ## What the element calls
@@ -117,7 +119,11 @@ All requests go to `<api-base>/…`, same origin, `cache: 'no-store'`.
 | `GET session` | `{ ok, token, dryRun }` | No token means no buttons: rows link to GitHub instead. Refused from server-pc itself. |
 | `GET data` | `data.json` | Read-only. Allowed from server-pc too. |
 | `GET proposals` | `{ bodies: { "<repo>#<n>": markdown } }` | Fetched on the first row expand. Rendered escape-first. |
-| `POST approve` / `hold` / `reject` / `unapprove` | `{ repo, number, note?, via?: 'row' \| 'batch', batch? }` with `X-Hub-Token` and `Content-Type: application/json` | **One request acts on one issue.** A 403 `bad token` reloads the session once and retries once. |
+| `GET feedback` | `{ ok, schema: 1, available, outcomesAt, dueRatings: [{ id, project, kind, title, shippedAt, dueAt, expiresAt }] (≤ 5, oldest first), dueTotal, suggestions: [{ id, project, ts, agent, text }] (≤ 10, newest first), suggestionsTotal, summary: { shipped, workingOn, usefulThisWeek, planUse, problems } \| null }` | Read-only, polled with `data`. Allowed from server-pc too; not audited. Built from `state\outcomes.json` + `feedback.jsonl` + `state\product\<project>\focus-suggestions.jsonl`. No `outcomes.json` yet = `available: false` with empty lists, never an error. An action server without it (404) = no summary strip, no Rate rows, no suggestions. |
+| `POST approve` / `hold` / `unapprove` | `{ repo, number, via?: 'row' \| 'batch', batch? }` with `X-Hub-Token` and `Content-Type: application/json` | **One request acts on one issue.** A 403 `bad token` reloads the session once and retries once. The page never sends a note or a reason with these. |
+| `POST reject` | `{ repo, number, reason: 'not-valuable' \| 'wrong-direction' \| 'later', note?, via? }` (same headers) | The public comment says the reason in words ("Rejected from the ops center: not valuable"). The `note` (≤ 500 chars) stays on server-pc (`feedback.jsonl`) and is **never** posted to GitHub. Without `reason` the server keeps the old behaviour (note appended to the comment); the page always sends one. |
+| `POST rate` | `{ id, value: 'used' \| 'unnoticed' \| 'undo', note? }` (same headers) | One rating of one feature from `dueRatings` (a feature not yet rated). **No GitHub call**: one `feedback.jsonl` line. 404 unknown id, 409 already rated. |
+| `POST suggestion` | `{ id, decision: 'accept' \| 'dismiss' }` (same headers) | One choice on one open steering suggestion. **Records only**: no file or GitHub change (an accepted change is applied by Claude when Ve asks). |
 
 Action rules (hub `CLAUDE.md`, "Dashboard"; enforced by `dashboard/test/safety.test.ts`):
 - No approve-all. Nothing is automatic or timed.
@@ -125,9 +131,14 @@ Action rules (hub `CLAUDE.md`, "Dashboard"; enforced by `dashboard/test/safety.t
   It sends one POST per item, one after the other, with `via: 'batch'` and a batch id. If the shortlist changes before
   the Yes, nothing is approved.
 - **Undo** removes `approved` within 5 minutes of the page adding it (from the row, the toast, or "Undo these N").
-- **Reject** sits behind the row's More menu. Its confirm step is a one-tap reason picker. Until the server takes a
-  `reason` field (feedback F2), the reason goes in `note` as exactly `Reason: not-valuable`, `Reason: wrong-direction` or
-  `Reason: later`. There is no free-text box: today the note is posted publicly on GitHub.
+- **Reject** sits behind the row's More menu. Its confirm step is a one-tap reason picker that sends `reason`, plus an
+  optional "Add a note" disclosure whose note stays on server-pc.
+- **Text boxes** exist only in two "Add a note" disclosures: the reject reason picker and each Rate row (max 500
+  characters). Notes are never sent to `approve`, `hold` or `unapprove`, and never reach GitHub.
+- **Rate** (feedback): "Used it" / "Didn't notice" send one `rate` each; "Undo it" first asks an in-page one-line confirm
+  ("Prepare removal? You'll confirm before anything is removed.") because it starts a revert proposal later. After a tap:
+  a toast, and the row disappears.
+- **Steering suggestions** in Needs you: Accept / Dismiss send one `suggestion` each and change nothing else.
 - Links are `https` only. A Preview link is rendered only for `https://server-pc.tail0e4194.ts.net` on ports 8460-8464.
 
 ## Token roles (drift guard)
