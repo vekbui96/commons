@@ -24,7 +24,11 @@ export function AppHost() {
   if (!app || !Component) return <NotFound />;
 
   return (
-    <AppShell title={app.manifest.name} description={app.manifest.description}>
+    <AppShell
+      title={app.manifest.name}
+      description={app.manifest.description}
+      wide={app.manifest.kind === "internal" && app.manifest.wide === true}
+    >
       <Suspense fallback={<p className="loading">Loading…</p>}>
         <Component />
       </Suspense>

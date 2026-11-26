@@ -55,6 +55,9 @@ export function validateManifest(manifest: unknown, folder: string, hasComponent
       errors.push(`${where}: external apps must not have an App.tsx`);
     }
   } else if (m.kind === "internal") {
+    if ("wide" in m && typeof m.wide !== "boolean") {
+      errors.push(`${where}: wide must be true or false`);
+    }
     if ("url" in m) {
       errors.push(`${where}: internal apps must not set url`);
     }

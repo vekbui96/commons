@@ -116,6 +116,8 @@ describe("validateManifest", () => {
     delete (internal as Record<string, unknown>).url;
     expect(validateManifest(internal, "demo", false)).toHaveLength(1);
     expect(validateManifest(internal, "demo", true)).toEqual([]);
+    expect(validateManifest({ ...internal, wide: true }, "demo", true)).toEqual([]);
+    expect(validateManifest({ ...internal, wide: "yes" }, "demo", true)).toHaveLength(1);
   });
 
   it("finds duplicate ids", () => {

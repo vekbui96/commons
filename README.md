@@ -146,7 +146,7 @@ such as `VITE_BASE=/commons/` and breaks every asset.
 2. For an internal app, add `App.tsx` in the same folder with a default-exported
    component, and a short `CLAUDE.md` (15 lines or fewer) copied from
    [`docs/templates/app-CLAUDE.md`](docs/templates/app-CLAUDE.md): what the app
-   does, its files, its own rules, how to test it. For an external app, set
+   does, its files, its own rules, how to test it. Add `wide: true` for a ~1100px column (diagrams, tables). For an external app, set
    `kind: "external"` and an https `url`; it needs no CLAUDE.md.
 3. If it needs a backend, add `src/apps/<id>/routes.ts` in `commons-api` with
    the same id; call it here with `appApiUrl("<id>", "...")` from the client.

@@ -35,6 +35,8 @@ interface ManifestBase {
 
 export interface InternalAppManifest extends ManifestBase {
   kind: "internal";
+  /** Use the ~1100px content column instead of ~680px (diagrams, tables). */
+  wide?: boolean;
 }
 
 export interface ExternalAppManifest extends ManifestBase {
