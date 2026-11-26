@@ -10,6 +10,8 @@ export interface AppShellProps {
   description?: ReactNode;
   /** ~1100px content column instead of ~680px. */
   wide?: boolean;
+  /** Where "← Commons" and Esc go: the homepage tab the user came from (default "/"). */
+  backTo?: string;
   children: ReactNode;
 }
 
@@ -20,7 +22,7 @@ const EDITABLE = "input, textarea, select, [contenteditable]:not([contenteditabl
  * name, then one content column. Esc goes back to Commons (inside a text field
  * it first leaves the field).
  */
-export function AppShell({ title, description, wide = false, children }: AppShellProps) {
+export function AppShell({ title, description, wide = false, backTo = "/", children }: AppShellProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,17 +33,17 @@ export function AppShell({ title, description, wide = false, children }: AppShel
         target.blur();
         return;
       }
-      navigate("/");
+      navigate(backTo);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [navigate]);
+  }, [navigate, backTo]);
 
   return (
     <div className="ui-shell">
       <header className="ui-topbar">
         <div className={cx("ui-topbar__inner", wide && "is-wide")}>
-          <Link to="/" className="ui-topbar__back">
+          <Link to={backTo} className="ui-topbar__back">
             <span aria-hidden="true">←</span> Commons
           </Link>
           <h1 className="ui-topbar__title">{title}</h1>

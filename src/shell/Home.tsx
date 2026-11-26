@@ -1,102 +1,97 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { appPath, listedApps, type RegisteredApp } from "@/registry/registry";
-import { Input, ListRow, SiteMark, ThemeToggle } from "@/ui";
+import { Suspense, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { findInternalApp, listedApps, appPath, type RegisteredApp } from "@/registry/registry";
+import { appsForTab, availableTabs, resolveTab, tabPath, type SelectableTab } from "@/tabs/registry";
+import type { AppsTab, PageTab, TabDefinition } from "@/tabs/types";
+import { ListRow, ThemeToggle } from "@/ui";
+import { lazyFor } from "./lazyApp";
+import { fromTab, tabDomId } from "./navState";
+import { SiteAvatar } from "./SiteAvatar";
+import { TabCarousel } from "./TabCarousel";
 import "./home.css";
 
-const EDITABLE = "input, textarea, select, [contenteditable]:not([contenteditable='false'])";
+const PANEL_ID = "home-tabpanel";
 
-function matches(app: RegisteredApp, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const { name, description } = app.manifest;
-  return name.toLowerCase().includes(q) || description.toLowerCase().includes(q);
+/** True once the page has scrolled, so the sticky header can show its edge. */
+function useScrolled(): boolean {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 0);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  return scrolled;
 }
 
-export function Home({ apps = listedApps() }: { apps?: RegisteredApp[] }) {
-  const [query, setQuery] = useState("");
-  const filterRef = useRef<HTMLInputElement>(null);
-  const shown = useMemo(() => apps.filter((app) => matches(app, query)), [apps, query]);
+export interface HomeProps {
+  apps?: RegisteredApp[];
+  tabs?: TabDefinition[];
+}
 
-  // "/" jumps to the filter, as on GitHub and most search UIs.
+/**
+ * The homepage: a sticky header (the "Commons" pill, the site avatar and the
+ * tab carousel), then the selected tab's content. The page itself scrolls
+ * under the header. The selected tab lives in the URL: `#/tab/<id>`, `#/` for
+ * the default.
+ */
+export function Home({ apps = listedApps(), tabs = availableTabs() }: HomeProps) {
+  const { tabId } = useParams();
+  const navigate = useNavigate();
+  const scrolled = useScrolled();
+  const tab = resolveTab(tabId, tabs);
+  const here = tab ? tabPath(tab.id, tabs) : "/";
+
+  // An unknown tab id falls back to the default; make the URL say so.
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (event.target instanceof HTMLElement && event.target.closest(EDITABLE)) return;
-      event.preventDefault();
-      filterRef.current?.focus();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+    if (tabId !== undefined && tab?.id !== tabId) navigate(here, { replace: true });
+  }, [tabId, tab, here, navigate]);
+
+  // A new tab starts at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [tab?.id]);
+
+  function select(next: SelectableTab) {
+    const path = tabPath(next.id, tabs);
+    if (path !== here) navigate(path);
+  }
 
   return (
     <div className="home">
-      <header className="home__intro">
-        <h1 className="home__wordmark">Commons</h1>
-        <SiteMark />
-        <p className="home__lede">Small apps and utilities, made as they are needed.</p>
+      <header className="home-header" data-scrolled={scrolled || undefined}>
+        <div className="home-header__inner">
+          <div className="home-header__bar">
+            <h1 className="home-pill">
+              <Link to="/" className="home-pill__link">
+                Commons
+              </Link>
+            </h1>
+            <SiteAvatar />
+          </div>
+          {tabs.length > 0 && (
+            <TabCarousel tabs={tabs} selectedId={tab?.id} onSelect={select} panelId={PANEL_ID} />
+          )}
+        </div>
       </header>
 
-      <main className="home__index">
-        <h2 className="home__label" id="apps-heading">
-          Apps <span className="num">{apps.length}</span>
-        </h2>
-
-        {apps.length > 0 && (
-          <div className="home__filter">
-            <label htmlFor="app-filter" className="visually-hidden">
-              Filter apps
-            </label>
-            <Input
-              ref={filterRef}
-              id="app-filter"
-              type="search"
-              placeholder="Filter apps"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape" && query) {
-                  e.preventDefault();
-                  setQuery("");
-                }
-              }}
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <kbd className="home__filter-key" aria-hidden="true">
-              /
-            </kbd>
-          </div>
-        )}
-
-        {apps.length === 0 ? (
-          <p className="home__empty">Nothing here yet.</p>
-        ) : shown.length === 0 ? (
-          <p className="home__empty">No apps match “{query.trim()}”.</p>
-        ) : (
-          <ul className="ui-list" aria-labelledby="apps-heading">
-            {shown.map(({ manifest }) =>
-              manifest.kind === "external" ? (
-                <ListRow
-                  key={manifest.id}
-                  href={manifest.url}
-                  title={manifest.name}
-                  description={manifest.description}
-                  icon={manifest.icon}
-                  tint={manifest.tint}
-                />
-              ) : (
-                <ListRow
-                  key={manifest.id}
-                  to={appPath(manifest.id)}
-                  title={manifest.name}
-                  description={manifest.description}
-                  icon={manifest.icon}
-                  tint={manifest.tint}
-                />
-              ),
+      <main className="home__main">
+        {tab ? (
+          <section
+            id={PANEL_ID}
+            role="tabpanel"
+            aria-labelledby={tabDomId(tab.id)}
+            className="home__panel"
+            tabIndex={-1}
+          >
+            {tab.kind === "apps" ? (
+              <AppsPanel tab={tab} apps={appsForTab(tab, apps)} from={here} />
+            ) : (
+              <PagePanel tab={tab} />
             )}
-          </ul>
+          </section>
+        ) : (
+          <p className="home__empty">Nothing here yet.</p>
         )}
       </main>
 
@@ -107,5 +102,58 @@ export function Home({ apps = listedApps() }: { apps?: RegisteredApp[] }) {
         <ThemeToggle />
       </footer>
     </div>
+  );
+}
+
+function AppsPanel({ tab, apps, from }: { tab: AppsTab; apps: RegisteredApp[]; from: string }) {
+  const headingId = `${PANEL_ID}-heading`;
+  return (
+    <>
+      <h2 className="home__label" id={headingId}>
+        {tab.label} <span className="num">{apps.length}</span>
+      </h2>
+      {apps.length === 0 ? (
+        <p className="home__empty">Nothing here yet.</p>
+      ) : (
+        <ul className="ui-list" aria-labelledby={headingId}>
+          {apps.map(({ manifest }) =>
+            manifest.kind === "external" ? (
+              <ListRow
+                key={manifest.id}
+                href={manifest.url}
+                title={manifest.name}
+                description={manifest.description}
+                icon={manifest.icon}
+                tint={manifest.tint}
+              />
+            ) : (
+              <ListRow
+                key={manifest.id}
+                to={appPath(manifest.id)}
+                state={fromTab(from)}
+                title={manifest.name}
+                description={manifest.description}
+                icon={manifest.icon}
+                tint={manifest.tint}
+              />
+            ),
+          )}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function PagePanel({ tab }: { tab: PageTab }) {
+  const app = findInternalApp(tab.app);
+  const Component = app ? lazyFor(app) : null;
+  if (!Component) return <p className="home__empty">Nothing here yet.</p>;
+  return (
+    <>
+      <h2 className="visually-hidden">{tab.label}</h2>
+      <Suspense fallback={<p className="loading">Loading…</p>}>
+        <Component />
+      </Suspense>
+    </>
   );
 }

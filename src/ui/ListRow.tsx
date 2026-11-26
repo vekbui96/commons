@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { AppMark } from "./AppMark";
 import type { AppTint } from "./tints";
 
-type Target = { to: string; href?: never } | { href: string; to?: never };
+type Target = { to: string; state?: unknown; href?: never } | { href: string; to?: never; state?: never };
 
 export type ListRowProps = Target & {
   title: ReactNode;
@@ -15,9 +15,10 @@ export type ListRowProps = Target & {
 
 /**
  * One tappable row in a list (put it inside a <ul className="ui-list">).
- * `to` is a route inside Commons; `href` opens in a new tab.
+ * `to` is a route inside Commons (with optional router `state`); `href` opens
+ * in a new tab.
  */
-export function ListRow({ title, description, icon, tint, ...target }: ListRowProps) {
+export function ListRow({ title, description, icon, tint, state, ...target }: ListRowProps) {
   const external = target.href !== undefined;
   const body = (
     <>
@@ -40,7 +41,7 @@ export function ListRow({ title, description, icon, tint, ...target }: ListRowPr
           <span className="visually-hidden"> (opens in a new tab)</span>
         </a>
       ) : (
-        <Link className="ui-listrow__link" to={target.to!}>
+        <Link className="ui-listrow__link" to={target.to!} state={state}>
           {body}
         </Link>
       )}

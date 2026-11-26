@@ -2,8 +2,9 @@
 /**
  * Checks a built dist/ against its target (build/target.ts):
  *
- *   node scripts/check-dist.mjs public    no private app's id or name anywhere in dist/
- *   node scripts/check-dist.mjs private   every private app is in dist/ (the switch works)
+ *   node scripts/check-dist.mjs public    no private app's id or name, and no private
+ *                                         tab definition, anywhere in dist/
+ *   node scripts/check-dist.mjs private   every private app and tab is in dist/ (the switch works)
  *
  * CI and the Pages deploy run the public check after `npm run build`;
  * scripts/deploy-private.ps1 runs the private one before copying.
@@ -12,11 +13,12 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { privateAppFolders, resolveTarget } from "../build/target.ts";
+import { privateAppFolders, privateTabIds, resolveTarget } from "../build/target.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DIST = join(ROOT, "dist");
 const APPS = join(ROOT, "src", "apps");
+const TAB_DEFS = join(ROOT, "src", "tabs", "defs");
 const target = resolveTarget(process.argv[2]);
 
 /** @param {string} dir @returns {string[]} */
@@ -33,24 +35,33 @@ const contents = distFiles.map((f) => ({ file: relative(ROOT, f), text: readFile
 const privateApps = privateAppFolders(APPS).map((folder) => {
   const source = readFileSync(join(APPS, folder, "manifest.ts"), "utf8");
   const name = /\bname\s*:\s*"([^"]+)"/.exec(source)?.[1];
-  return { folder, needles: [`apps/${folder}/`, `"${folder}"`, ...(name ? [name] : [])] };
+  return { what: `app "${folder}"`, needles: [`apps/${folder}/`, `"${folder}"`, ...(name ? [name] : [])] };
 });
 
-if (privateApps.length === 0) {
-  console.log(`check-dist (${target}): no private apps in src/apps; nothing to check.`);
+// A tab's id and label are ordinary words ("private", "Private") that appear in
+// any bundle, so tabs are found by their file: the registry glob key
+// ("./defs/<id>.ts") and the sourcemap path both contain "defs/<id>.ts".
+const privateTabs = privateTabIds(TAB_DEFS).map((id) => ({
+  what: `tab "${id}"`,
+  needles: [`defs/${id}.ts`],
+}));
+
+const items = [...privateApps, ...privateTabs];
+if (items.length === 0) {
+  console.log(`check-dist (${target}): no private apps or tabs in src/; nothing to check.`);
   process.exit(0);
 }
 
 const problems = [];
-for (const app of privateApps) {
+for (const item of items) {
   const hits = contents.flatMap(({ file, text }) =>
-    app.needles.filter((needle) => text.includes(needle)).map((needle) => `${file} contains ${needle}`),
+    item.needles.filter((needle) => text.includes(needle)).map((needle) => `${file} contains ${needle}`),
   );
   if (target === "public" && hits.length > 0) {
-    problems.push(`private app "${app.folder}" leaked into the public build:\n  ${hits.join("\n  ")}`);
+    problems.push(`private ${item.what} leaked into the public build:\n  ${hits.join("\n  ")}`);
   }
   if (target === "private" && hits.length === 0) {
-    problems.push(`private app "${app.folder}" is missing from the private build`);
+    problems.push(`private ${item.what} is missing from the private build`);
   }
 }
 
@@ -58,9 +69,9 @@ if (problems.length > 0) {
   console.error(`check-dist (${target}) FAILED\n${problems.join("\n")}`);
   process.exit(1);
 }
-const ids = privateApps.map((a) => a.folder).join(", ");
+const names = items.map((i) => i.what).join(", ");
 console.log(
   target === "public"
-    ? `check-dist (public): ${distFiles.length} files, no trace of private apps (${ids}).`
-    : `check-dist (private): private apps present (${ids}).`,
+    ? `check-dist (public): ${distFiles.length} files, no trace of private ${names}.`
+    : `check-dist (private): present: ${names}.`,
 );

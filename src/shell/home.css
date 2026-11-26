@@ -1,57 +1,233 @@
 /* Homepage. Semantic roles and scale tokens only. */
 
 .home {
-  width: 100%;
-  max-width: calc(var(--column) + 2 * var(--gutter));
-  margin: 0 auto;
-  /* viewport-fit=cover (index.html): keep clear of the notch in landscape and
-     of the iOS home indicator / Safari toolbar at the bottom. */
-  padding-block: var(--space-6) calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
-  padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px))
-    max(var(--gutter), env(safe-area-inset-right, 0px));
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
-/* Phones: one compact row (wordmark + "Private" mark), then one muted line. */
-.home__intro {
+/* Keyboard focus moving down the list must not land under the sticky header. */
+:root:has(.home-header) {
+  scroll-padding-top: calc(9rem + env(safe-area-inset-top, 0px));
+}
+
+/* One column for the header, the content and the footer, like an app page. */
+.home-header__inner,
+.home__main,
+.home__footer {
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  /* viewport-fit=cover (index.html): keep clear of the notch in landscape. */
+  padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px))
+    max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
+/* ---------- Sticky header: top bar + tab carousel ---------- */
+
+.home-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+  border-bottom: var(--hairline) solid transparent;
+  transition: border-color var(--duration) var(--ease);
+}
+
+/* Once the page has scrolled, the content passes under a visible edge. */
+.home-header[data-scrolled] {
+  border-bottom-color: var(--line);
+}
+
+.home-header__inner {
+  display: grid;
+  /* minmax(0, ...): the chip row must scroll, not widen the column. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  padding-block: var(--space-3) var(--space-2);
+}
+
+.home-header__bar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  column-gap: var(--space-3);
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
-.home__intro .ui-site-mark {
-  margin-inline-start: 0;
-}
-
-.home__wordmark {
-  font-size: var(--text-xl);
-  line-height: 1;
-  letter-spacing: -0.01em;
+/* The "Commons" pill (the page's h1). */
+.home-pill {
   margin: 0;
+  min-width: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  line-height: 1;
 }
 
-.home__lede {
-  flex-basis: 100%;
-  margin: var(--space-1) 0 0;
+.home-pill__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-inline: var(--space-5);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+/* The round avatar badge: "Private" or "Guest". */
+.site-avatar {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--tap);
+  height: var(--tap);
+  padding-inline: var(--space-3);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
   color: var(--text-muted);
+  font: inherit;
   font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-/* Too narrow for the tagline on one line: drop it. */
-@media (max-width: 22.4rem) {
-  .home__lede {
-    display: none;
+.site-avatar.is-private {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+button.site-avatar {
+  cursor: pointer;
+}
+
+/* ---------- Tab carousel ---------- */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Phones: the row runs edge to edge so chips scroll in from the screen edge. */
+.tabs__list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: var(--space-2);
+  margin-inline: calc(-1 * var(--gutter));
+  padding: var(--space-1) var(--gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+}
+
+.tabs__list::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-chip {
+  flex: none;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+/* Selected: a wide pill with icon and label. */
+.tab-chip.is-selected {
+  padding-inline: var(--space-4) var(--space-5);
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+  cursor: default;
+}
+
+.tab-icon {
+  flex: none;
+}
+
+/* ‹ › buttons: only with a mouse, and only while the row overflows. */
+.tabs__arrow {
+  display: none;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tabs__arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tabs[data-overflow] .tabs__arrow {
+    display: grid;
+  }
+
+  .tabs[data-overflow] .tabs__list {
+    margin-inline: 0;
+    padding-inline: var(--space-1);
+    scroll-padding-inline: var(--space-1);
+  }
+
+  .tab-chip:not(.is-selected):hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .tabs__arrow:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .home-pill__link:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
   }
 }
 
-.home__index {
-  margin-top: var(--space-6);
+/* ---------- Content ---------- */
+
+.home__main {
   flex: 1;
-  min-width: 0;
+  padding-block: var(--space-4) 0;
+}
+
+.home__panel:focus {
+  outline: none;
 }
 
 .home__label {
@@ -74,41 +250,17 @@
   font-weight: var(--weight-regular);
 }
 
-.home__filter {
-  position: relative;
-  margin-bottom: var(--space-2);
-}
-
-.home__filter .ui-input {
-  padding-inline-end: 3rem;
-}
-
-.home__filter-key {
-  position: absolute;
-  inset-inline-end: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-/* The "/" shortcut needs a keyboard; hide its hint on touch-only devices. */
-@media not (hover: hover) {
-  .home__filter-key {
-    display: none;
-  }
-}
-
 .home__empty {
   color: var(--text-muted);
 }
 
 .home__footer {
-  margin-top: var(--space-8);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  padding-block: var(--space-12) calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
@@ -123,50 +275,39 @@
   }
 }
 
-/* Wide screens: intro on the left, the index on the right. */
-@media (min-width: 60rem) {
-  .home {
-    max-width: var(--column-wide);
-    padding-block: var(--space-16) calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
-    padding-inline: var(--space-12);
-    display: grid;
-    grid-template-columns: minmax(16rem, 1fr) minmax(0, 36rem);
-    grid-template-rows: 1fr auto;
-    column-gap: var(--space-24);
+@media (min-width: 48rem) {
+  .home-header__inner {
+    padding-block: var(--space-4) var(--space-3);
   }
 
-  .home__intro {
-    position: sticky;
-    top: var(--space-16);
-    align-self: start;
-    flex-direction: column;
-    align-items: flex-start;
+  .home__main {
+    padding-block-start: var(--space-6);
   }
+}
 
-  /* The mark sits above the wordmark here; the larger wordmark has the room. */
-  .home__intro .ui-site-mark {
-    order: -1;
-    margin-bottom: var(--space-4);
+/* ---------- Windows High Contrast ---------- */
+
+@media (forced-colors: active) {
+  .home-header[data-scrolled] {
+    border-bottom-color: CanvasText;
   }
-
-  .home__wordmark {
-    font-size: var(--text-display);
-    letter-spacing: -0.02em;
+  .home-pill__link,
+  .site-avatar {
+    border-color: CanvasText;
   }
-
-  .home__lede {
-    flex-basis: auto;
-    margin-top: var(--space-4);
-    font-size: var(--text-md);
-    max-width: 22rem;
+  .tab-chip,
+  .tabs__arrow {
+    border-color: ButtonText;
   }
-
-  .home__index {
-    margin-top: 0.75rem;
+  .tab-chip.is-selected {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
   }
-
-  .home__footer {
-    grid-column: 1 / -1;
-    margin-top: var(--space-12);
+  .tabs__arrow:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    opacity: 1;
   }
 }

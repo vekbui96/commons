@@ -7,6 +7,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/tab/:tabId" element={<Home />} />
       <Route path="/apps/:id" element={<AppHost />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

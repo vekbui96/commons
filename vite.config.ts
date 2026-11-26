@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
-import { excludePrivateApps, resolveTarget } from "./build/target";
+import { excludePrivateApps, excludePrivateTabs, resolveTarget } from "./build/target";
 
 // The Commons API (vekbui96/commons-api, default port 8790). Dev convenience
 // only: production calls go through src/api/client.ts with VITE_COMMONS_API.
@@ -10,6 +10,7 @@ const API_TARGET = process.env.VITE_SERVER_TARGET ?? "http://localhost:8790";
 // COMMONS_TARGET=public|private (default public): see build/target.ts.
 const TARGET = resolveTarget(process.env.COMMONS_TARGET);
 const APPS_DIR = fileURLToPath(new URL("./src/apps", import.meta.url));
+const TAB_DEFS_DIR = fileURLToPath(new URL("./src/tabs/defs", import.meta.url));
 
 export default defineConfig(({ command, isPreview }) => ({
   // Public builds are served from https://vekbui96.github.io/commons/; the
@@ -21,9 +22,14 @@ export default defineConfig(({ command, isPreview }) => ({
   define: {
     "import.meta.env.COMMONS_TARGET": JSON.stringify(TARGET),
   },
-  // Tests always see every app (so every manifest is validated); builds and the
-  // dev server for the public target never see private ones.
-  plugins: [react(), ...(process.env.VITEST ? [] : [excludePrivateApps(TARGET, APPS_DIR)])],
+  // Tests always see every app and tab (so every one is validated); builds and
+  // the dev server for the public target never see private ones.
+  plugins: [
+    react(),
+    ...(process.env.VITEST
+      ? []
+      : [excludePrivateApps(TARGET, APPS_DIR), excludePrivateTabs(TARGET, TAB_DEFS_DIR)]),
+  ],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

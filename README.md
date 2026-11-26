@@ -1,8 +1,9 @@
 # Commons Front End
 
 A personal home for small apps and utilities, made as they are needed. The
-homepage lists every app; some live inside Commons, others are links to sites
-elsewhere.
+homepage has a sticky header (the "Commons" pill, an avatar badge, and a row
+of tab chips) over the selected tab's apps; some apps live inside Commons,
+others are links to sites elsewhere.
 
 Live: https://vekbui96.github.io/commons/
 
@@ -48,6 +49,7 @@ commons/
 │  │  ├─ App.tsx         internal apps only, lazy-loaded at #/apps/<id>
 │  │  └─ CLAUDE.md       internal apps only: the app's own short agent notes
 │  ├─ registry/          discovers apps/*/manifest.ts, validates them
+│  ├─ tabs/              homepage tabs: defs/<id>.ts, registry, validation, icons
 │  ├─ shell/             homepage, app host, routes (hash router)
 │  ├─ api/client.ts      the only module that calls the Commons API
 │  ├─ ui/                shared component kit (AppShell, Button, Input, ...)
@@ -67,8 +69,9 @@ commons/
   `external` (a link out, opened in a new tab).
 - `visibility` is `public` or `private`; private apps exist only in the private
   build (see above). Write it as a plain literal: the build reads it.
-- Routing is hash-based (`#/apps/units`) so deep links work on Pages without a
-  server fallback.
+- Routing is hash-based so deep links work on Pages without a server fallback:
+  `#/` (default tab), `#/tab/<id>`, `#/apps/<id>`. "← Commons" in an app
+  returns to the tab it was opened from (router state; `/` otherwise).
 - API calls go through `src/api/client.ts`: same origin on the private build,
   `VITE_COMMONS_API` on the public one (unset for now). `checkReachable()` /
   `useApi()` ask `/api/health` with a short timeout (cached), and `<NeedsApi>`
@@ -107,7 +110,9 @@ One global system controls every app's look:
   font name or weight below 400 outside `src/styles/tokens*.css` (exception: a
   `style-guard-allow` comment with a reason). `src/styles/tokens.test.ts` checks
   WCAG AA contrast (4.5:1 text, 3:1 UI) for the key pairs in both modes.
-- Keys: `/` focuses the homepage filter; Esc leaves an app.
+- Keys: Esc leaves an app (back to its tab); in the tab row, arrows / Home /
+  End move between chips and Enter or Space selects. `/` is kept free for a
+  future search.
 
 ### How to style a new app
 
@@ -173,6 +178,44 @@ ESLint enforces this with a local rule, `commons/app-boundaries`
 A finished app is reused only as a published runtime embed: a web component at
 a versioned URL such as `embed/v1.js`, loaded live. No embed exists yet; the rule
 is recorded so nobody imports another app's source in the meantime.
+
+## Homepage tabs
+
+The chips under the top bar come from a registry like the apps: one file per
+tab, `src/tabs/defs/<id>.ts`, default-exporting `defineTab({...})`:
+
+| Field        | Meaning                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| `id`         | kebab-case, equal to the file name; the URL is `#/tab/<id>`            |
+| `label`      | shown on the selected chip; tooltip and accessible name otherwise      |
+| `icon`       | an inline SVG from `src/tabs/icons.tsx` (`globe`, `grid`, `lock`, ...) |
+| `visibility` | `public` or `private` (a plain literal, the file's only `visibility:`) |
+| `order`      | carousel position; the lowest non-link tab is the default (`#/`)       |
+| `kind`       | `apps` (`filter.appVisibility`), `link` (`url`) or `page` (`app` id)   |
+
+- `apps` lists the apps matching its filter. `link` opens its URL like an
+  external app (https in a new tab; `#/...` or a same-origin `/path` in this
+  one) and is never "selected". `page` renders one internal app in the tab,
+  without the app bar.
+- Today: **Public** (public apps, the only tab on Pages, the default) and
+  **Private** (private apps, private build only).
+- Private tabs are cut out of the public bundle the same way as private apps
+  (`excludePrivateTabs` in `build/target.ts`), and `check-dist` looks for their
+  files (`defs/<id>.ts`) in `dist/`.
+
+Example: adding an Ops hub tab is one entry, `src/tabs/defs/ops.ts` (not added):
+
+```ts
+export default defineTab({
+  id: "ops",
+  label: "Ops hub",
+  icon: "link",
+  kind: "link",
+  url: "/ops/", // a same-origin path; never a *.ts.net host: the source is public
+  order: 30,
+  visibility: "private",
+});
+```
 
 ## Checks
 

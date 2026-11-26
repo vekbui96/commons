@@ -23,6 +23,7 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
 - `src/apps/<id>/CLAUDE.md`: one per internal app (what it does, files, its rules,
   how to test it). Read the one for the app you are changing.
 - `docs/templates/app-CLAUDE.md`: the template for a new app's CLAUDE.md.
+- `src/tabs/CLAUDE.md`: the homepage tabs (the chips under the top bar).
 
 ## Rules
 
@@ -40,6 +41,12 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   published runtime embed (a web component at a versioned URL such as
   `embed/v1.js`, loaded live). That embed does not exist yet; the rule stands
   anyway. ESLint enforces it (`commons/app-boundaries`, `eslint/app-boundaries.js`).
+- **Adding a homepage tab = one file.** `src/tabs/defs/<id>.ts` with
+  `defineTab({...})`: kind `apps` (apps by visibility), `link` (a URL) or `page`
+  (one internal app in the tab). E.g. an Ops hub tab is one `link` entry with
+  `visibility: "private"` (its URL a same-origin path, never a `*.ts.net` host).
+  Private tabs are cut from the public bundle like private apps. Routes:
+  `#/` (default tab), `#/tab/<id>`, `#/apps/<id>`.
 - **All API calls go through `src/api/client.ts`**. Private build: same origin
   (`/api/...`). Public build: `VITE_COMMONS_API`, unset (no backend, `hasApi()`
   false) until Ve asks for optional private features there. No `fetch` to the API
@@ -52,14 +59,15 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
 - **This page is public.** No tailnet hostnames (`*.ts.net`), the ops dashboard,
   LAN addresses or secrets anywhere in `src/`. A registry test enforces the host
   rule. `VITE_` values end up in the public bundle.
-- **`visibility: "private"` apps exist only in the private build.** Write it as a
+- **`visibility: "private"` apps and tabs exist only in the private build.** Write it as a
   plain literal in the manifest (the build reads it; a test checks). The public
   build swaps the registry glob's placeholder for negative patterns, so no private
-  manifest, component or chunk reaches Pages; `node scripts/check-dist.mjs public`
-  (CI and the Pages deploy run it) fails if a private id or name is in `dist/`.
+  manifest, component or chunk reaches Pages (tabs: the same, for
+  `src/tabs/defs/`); `node scripts/check-dist.mjs public` (CI and the Pages
+  deploy run it) fails if a private app or tab is in `dist/`.
   App code is still public on GitHub: data stays on server-pc, never in source.
-- The private site shows a "Private" mark (`SiteMark`, in the top bar and on the
-  homepage). Keep it.
+- The private site says "Private": the homepage avatar (`src/shell/SiteAvatar.tsx`,
+  "Guest" on the public site) and `SiteMark` in each app's top bar. Keep both.
 - **Mobile first; must look good on Windows.** This is a rule, not a
   suggestion. Every UI change is checked at 390px and at 1440px with
   Windows-style 125% scaling (Playwright `deviceScaleFactor: 1.25`), in both

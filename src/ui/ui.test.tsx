@@ -73,19 +73,13 @@ describe("keyboard", () => {
     expect(await screen.findByRole("heading", { name: "Home page" })).toBeInTheDocument();
   });
 
-  it("/ focuses the homepage filter, which narrows the list", async () => {
+  it("leaves / free on the homepage (kept for a future search)", () => {
     render(
       <MemoryRouter future={future}>
         <Home />
       </MemoryRouter>,
     );
-    fireEvent.keyDown(document.body, { key: "/" });
-    const filter = screen.getByLabelText("Filter apps");
-    expect(filter).toHaveFocus();
-    await userEvent.type(filter, "units");
-    expect(screen.getAllByRole("listitem")).toHaveLength(1);
-    await userEvent.clear(filter);
-    await userEvent.type(filter, "zzz");
-    expect(screen.getByText(/No apps match/)).toBeInTheDocument();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(fireEvent.keyDown(document.body, { key: "/" })).toBe(true); // not default-prevented
   });
 });

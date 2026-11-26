@@ -1,23 +1,14 @@
-import { Suspense, lazy, useMemo, type ComponentType, type LazyExoticComponent } from "react";
-import { useParams } from "react-router-dom";
-import { findInternalApp, type RegisteredApp } from "@/registry/registry";
+import { Suspense, useMemo } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { findInternalApp } from "@/registry/registry";
 import { AppShell } from "@/ui";
+import { lazyFor } from "./lazyApp";
+import { backTarget } from "./navState";
 import { NotFound } from "./NotFound";
-
-// One lazy component per app, created once so re-renders don't remount it.
-const lazyCache = new Map<string, LazyExoticComponent<ComponentType>>();
-
-function lazyFor(app: RegisteredApp) {
-  let component = lazyCache.get(app.manifest.id);
-  if (!component) {
-    component = lazy(app.load!);
-    lazyCache.set(app.manifest.id, component);
-  }
-  return component;
-}
 
 export function AppHost() {
   const { id = "" } = useParams();
+  const location = useLocation();
   const app = findInternalApp(id);
   const Component = useMemo(() => (app ? lazyFor(app) : null), [app]);
 
@@ -28,6 +19,7 @@ export function AppHost() {
       title={app.manifest.name}
       description={app.manifest.description}
       wide={app.manifest.kind === "internal" && app.manifest.wide === true}
+      backTo={backTarget(location.state)}
     >
       <Suspense fallback={<p className="loading">Loading…</p>}>
         <Component />

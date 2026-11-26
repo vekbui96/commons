@@ -1,7 +1,7 @@
 // Scoped check for one app: `npm run check:app -- <id>`.
 //
 // Runs Vitest and ESLint on src/apps/<id>/, plus any shared code under
-// src/shell, src/ui, src/registry, src/api or src/styles that the working tree
+// src/shell, src/ui, src/registry, src/tabs, src/api or src/styles that the working tree
 // changed (vs HEAD, untracked included). The registry test and the style guard
 // always run, because they check every app's manifest, CLAUDE.md and CSS.
 //
@@ -17,7 +17,7 @@ if (!id || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || !existsSync(join("src", "ap
   process.exit(2);
 }
 
-const SHARED = /^src\/(shell|ui|registry|api|styles)\//;
+const SHARED = /^src\/(shell|ui|registry|tabs|api|styles)\//;
 
 function git(args) {
   try {
