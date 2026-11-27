@@ -36,6 +36,12 @@ const PATHS = {
     </>
   ),
   pulse: <path d="M3.5 12h4l2.5-6 4 12 2.5-6h4" />,
+  nfc: (
+    <>
+      <rect x="3.5" y="6.5" width="11" height="11" rx="2" />
+      <path d="M17.5 9.5a4 4 0 0 1 0 5M20 7.5a7 7 0 0 1 0 9" />
+    </>
+  ),
   people: (
     <>
       <circle cx="9" cy="8.5" r="3.25" />

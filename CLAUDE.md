@@ -21,6 +21,7 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
 - `README.md`: architecture, style system, adding an app, local dev.
 - `docs/api-contract.md`: the contract with the API (identical in both repos).
 - `docs/ops-hub-contract.md`: the contract with the ops hub micro-frontend (Ops tab; identical in `D:\hub`).
+- `docs/nfc-controls-contract.md`: NFC controls (public tag runner route, private editor tab; identical in nfc-controls, commons-api, commons-public).
 - `src/apps/<id>/CLAUDE.md`: one per internal app (what it does, files, its rules,
   how to test it). Read the one for the app you are changing.
 - `docs/templates/app-CLAUDE.md`: the template for a new app's CLAUDE.md.
@@ -65,6 +66,17 @@ detail never goes here.** It goes in that app's own CLAUDE.md.
   started by `src/shell/tabBackgrounds.ts`) calls the hub's `fetchCount` at most
   every 5 min while the page is visible, and stands down while the panel is mounted.
   Background work is for private tabs only (`validate.ts`).
+- **NFC controls** (`src/shell/nfc/`) is the `<nfc-controls>` micro-frontend from
+  `vekbui96/nfc-controls`, never Commons source. Contract: `docs/nfc-controls-contract.md`,
+  identical in nfc-controls, commons-api and commons-public (commons-backend writes it;
+  copy it byte for byte). Public build: the `#/t/<id>?k=<key>` runner route, only when
+  `VITE_NFC_GATEWAY` is set; it loads `/nfc-controls/embed/v1.js` (same Pages origin) and
+  talks to the public gateway. The key leaves the address bar at once (sessionStorage,
+  mount option only; never logged). Private build: the "NFC controls" tab, loading
+  `/nfc/embed/v1.js` (`tailscale serve` `/nfc`); its own requests to
+  `/api/apps/nfc-controls/` are outside the `client.ts` rule, like Ops. `private` paths
+  live only in `privateConfig.ts`. The gateway's exact origin is the one tailnet name
+  allowed in the public bundle (a build variable, never in `src/`; check-dist enforces).
 - **Reachable is not configured.** The API answers only on the tailnet. Wrap API
   features in `<NeedsApi>` (or `useApi()`: `checking | reachable | unreachable`);
   unreachable shows a quiet "Connect to Tailscale to use this", never an error.

@@ -58,7 +58,15 @@ const opsHub = [
   },
 ];
 
-const items = [...privateApps, ...privateTabs, ...opsHub];
+// NFC controls (src/shell/nfc/, docs/nfc-controls-contract.md). The editor tab
+// and its private paths belong to the private build only.
+const nfcPrivate = [
+  { what: "NFC editor panel (shell/nfc/NfcPanel)", needles: ["shell/nfc/NfcPanel"] },
+  { what: "NFC private loader path (/nfc/embed/)", needles: ["/nfc/embed/"] },
+  { what: "NFC private API path (/api/apps/nfc-controls)", needles: ["/api/apps/nfc-controls"] },
+];
+
+const items = [...privateApps, ...privateTabs, ...opsHub, ...nfcPrivate];
 if (items.length === 0) {
   console.log(`check-dist (${target}): no private apps or tabs in src/; nothing to check.`);
   process.exit(0);
@@ -77,13 +85,47 @@ for (const item of items) {
   }
 }
 
-// Public only: no tailnet host and no hub dashboard port anywhere in dist/.
+// Public NFC tags: the runner route exists in the public build only when it was
+// built with VITE_NFC_GATEWAY (read here from the same env). That gateway's exact
+// origin is the ONE tailnet-named host allowed in the public bundle; no wildcard.
+const gateway = (process.env.VITE_NFC_GATEWAY ?? "").trim();
+let gatewayOrigin = "";
+if (gateway) {
+  try {
+    const url = new URL(gateway);
+    if (url.protocol !== "https:") throw new Error("not https");
+    gatewayOrigin = url.origin;
+  } catch {
+    problems.push(`VITE_NFC_GATEWAY is not an https URL: ${JSON.stringify(gateway)}`);
+  }
+}
+const runnerHits = contents
+  .filter(({ text }) => text.includes("shell/nfc/NfcRunnerRoute"))
+  .map(({ file }) => file);
+const publicLoaderHits = contents
+  .filter(({ text }) => text.includes("/nfc-controls/embed/v1.js"))
+  .map(({ file }) => file);
+if (target === "public" && gateway) {
+  if (runnerHits.length === 0) problems.push("VITE_NFC_GATEWAY is set but the #/t/ runner route is missing");
+  if (publicLoaderHits.length === 0)
+    problems.push("VITE_NFC_GATEWAY is set but the public NFC loader path is missing");
+} else if (runnerHits.length + publicLoaderHits.length > 0) {
+  problems.push(
+    `the public NFC runner is in a build without a gateway (or in the private build):\n  ${[...runnerHits, ...publicLoaderHits].join("\n  ")}`,
+  );
+}
+
+// Public only: no tailnet host (except that exact gateway origin), no hub
+// dashboard port and no private Commons port anywhere in dist/.
 if (target === "public") {
   for (const [label, pattern] of [
     ["a tailnet host (.ts.net)", /\.ts\.net/],
     ["the ops hub port (:8444)", /:8444\b/],
+    ["the private Commons port (:8445)", /:8445\b/],
   ]) {
-    const hits = contents.filter(({ text }) => pattern.test(text)).map(({ file }) => file);
+    const hits = contents
+      .filter(({ text }) => pattern.test(gatewayOrigin ? text.split(gatewayOrigin).join("") : text))
+      .map(({ file }) => file);
     if (hits.length > 0) problems.push(`${label} in the public build:\n  ${hits.join("\n  ")}`);
   }
 }

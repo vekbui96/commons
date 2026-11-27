@@ -52,8 +52,8 @@ const secretApp: RegisteredApp = {
 };
 
 describe("tab registry", () => {
-  it("discovers the Public, Private, Ops and Profiles tabs", () => {
-    expect(tabRegistry.map((t) => t.tab.id).sort()).toEqual(["ops", "private", "profiles", "public"]);
+  it("discovers the Public, Private, Ops, Profiles and NFC controls tabs", () => {
+    expect(tabRegistry.map((t) => t.tab.id).sort()).toEqual(["nfc", "ops", "private", "profiles", "public"]);
   });
 
   it.each(tabRegistry.map((t) => [t.file, t] as const))("tabs/defs/%s.ts is valid", (file, { tab }) => {
@@ -83,6 +83,7 @@ describe("tab registry", () => {
       "private",
       "ops",
       "profiles",
+      "nfc",
     ]);
   });
 
@@ -95,6 +96,7 @@ describe("tab registry", () => {
       "ops",
       "units-link",
       "profiles",
+      "nfc",
       "units-page",
     ]);
   });

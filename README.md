@@ -249,6 +249,31 @@ against `location.origin`, never a host: the source is public.
   `shell/ops/background`, `fetchCount`, `.ts.net` or `:8444` in `dist/`;
   `check-dist private` requires all but the last two.
 
+### NFC controls (public tags, private editor)
+
+The `<nfc-controls>` micro-frontend lives in its own repo, `vekbui96/nfc-controls`,
+and is loaded live as a versioned embed. Contract: `docs/nfc-controls-contract.md`
+(identical in nfc-controls, commons-api and commons-public). Code: `src/shell/nfc/`.
+
+- **Public runner route** `#/t/<id>?k=<key>` (public build only, and only when built
+  with `VITE_NFC_GATEWAY`, the repo variable `NFC_GATEWAY`). Full screen, a thin
+  "← Commons" row, the runner from `/nfc-controls/embed/v1.js` (that repo's Pages
+  site, same origin). `main.tsx` starts the loader and the tag read before React
+  boots. The key is taken out of the address bar into `sessionStorage`
+  (`nfc.key.<id>`) and passed as a mount option only. `VITE_NFC_FALLBACK` (variable
+  `NFC_FALLBACK`) is the encrypted backup copy used when the gateway is down.
+  States: runner-shaped skeleton; "This tag can't be reached right now." + Try again;
+  "Something went wrong." + Try again. Never Tailscale wording.
+- **Private tab** "NFC controls" (`src/tabs/defs/nfc.ts`, order 35): the editor from
+  `/nfc/embed/v1.js` on :8445 (`tailscale serve` `/nfc` → `D:\services\nfc-web`, set
+  by the main session). It talks to `/api/apps/nfc-controls/` itself; the host checks
+  reachability through `client.ts`. `#/tab/nfc?tag=<id>` opens one tag.
+- `check-dist public` fails on `shell/nfc/NfcPanel`, `/nfc/embed/`,
+  `/api/apps/nfc-controls` and `:8445`; the runner route and `/nfc-controls/embed/v1.js`
+  must be present exactly when `VITE_NFC_GATEWAY` is set, and that gateway's exact
+  origin is the only `.ts.net` text allowed. `check-dist private` requires the editor
+  pieces and refuses the runner route.
+
 ## Checks
 
 ```powershell

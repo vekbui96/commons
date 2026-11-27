@@ -28,6 +28,10 @@ export default defineConfig(({ command, isPreview }) => ({
     process.env.VITE_BASE ?? (TARGET === "public" && (command === "build" || isPreview) ? "/commons/" : "/"),
   define: {
     "import.meta.env.COMMONS_TARGET": JSON.stringify(TARGET),
+    // Public NFC tags (src/shell/nfc/config.ts). Always a string literal, so
+    // `if (import.meta.env.VITE_NFC_GATEWAY)` folds away when it's unset.
+    "import.meta.env.VITE_NFC_GATEWAY": JSON.stringify(process.env.VITE_NFC_GATEWAY ?? ""),
+    "import.meta.env.VITE_NFC_FALLBACK": JSON.stringify(process.env.VITE_NFC_FALLBACK ?? ""),
   },
   // Tests always see every app and tab (so every one is validated); builds and
   // the dev server for the public target never see private ones.

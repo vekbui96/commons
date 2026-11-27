@@ -27,6 +27,10 @@ jobs:
         run: npm run build && node scripts/check-dist.mjs private
         env:
           COMMONS_TARGET: private
+      - name: Build (public target, with an NFC gateway) and check the runner route and the one allowed origin
+        run: npm run build && node scripts/check-dist.mjs public
+        env:
+          VITE_NFC_GATEWAY: https://gateway.example.ts.net:10000/public/v1
       - name: Build (public target)
         run: npm run build
       - name: Check no private app reached the public build

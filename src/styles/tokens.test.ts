@@ -105,6 +105,37 @@ describe("design tokens", () => {
     }
   });
 
+  // docs/nfc-controls-contract.md "Token roles": <nfc-controls> uses only these
+  // (plus the scale tokens), inherited into its shadow DOM. Its own
+  // test/roles.ts holds the same list; renaming one breaks the NFC runner.
+  it("defines every role nfc-controls uses, in light and dark", () => {
+    const colours = [
+      "--bg",
+      "--surface",
+      "--surface-2",
+      "--text",
+      "--text-muted",
+      "--line",
+      "--line-strong",
+      "--accent",
+      "--accent-hover",
+      "--accent-soft",
+      "--on-accent",
+      "--ok",
+      "--ok-bg",
+      "--warn",
+      "--warn-bg",
+      "--danger",
+      "--danger-bg",
+      "--on-danger",
+      "--focus",
+    ];
+    for (const role of colours) {
+      expect(light.has(role), `${role} (light)`).toBe(true);
+      expect(dark.has(role), `${role} (dark)`).toBe(true);
+    }
+  });
+
   // docs/ops-hub-contract.md "Token roles": the ops hub's CSS uses only these,
   // inherited into its shadow DOM. Renaming one breaks the Ops tab.
   it("defines every role the ops hub uses, in light and dark", () => {

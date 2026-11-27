@@ -1,0 +1,186 @@
+/* NFC controls host: the public #/t/<id> runner route and the private tab. Semantic roles only. */
+
+/* ---------- The runner route: full screen, no carousel ---------- */
+
+.nfc-route {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.nfc-route__top,
+.nfc-route__main {
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px))
+    max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
+.nfc-route__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.5rem;
+}
+
+.nfc-route__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom, 0px));
+}
+
+.nfc-route__host {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nfc-route__host[hidden],
+.nfc-panel__host[hidden] {
+  display: none;
+}
+
+.nfc-route__host > nfc-controls {
+  flex: 1;
+}
+
+/* ---------- Skeletons (the runner's own geometry) ---------- */
+
+.nfc-skeleton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.nfc-skeleton__body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.nfc-skeleton__line,
+.nfc-skeleton__button,
+.nfc-panel-skeleton__row {
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  animation: nfc-pulse 1.4s var(--ease) infinite alternate;
+}
+
+.nfc-skeleton__line--eyebrow {
+  width: 5rem;
+  height: var(--text-sm);
+}
+
+.nfc-skeleton__line--name {
+  width: 70%;
+  height: var(--text-2xl);
+  margin-block: var(--space-1) var(--space-3);
+}
+
+.nfc-skeleton__line--short {
+  width: 45%;
+  height: var(--text-md);
+}
+
+.nfc-skeleton__button {
+  height: calc(var(--tap) + var(--space-5));
+  border-radius: var(--radius-lg);
+}
+
+.nfc-panel-skeleton {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.nfc-panel-skeleton__row {
+  height: calc(var(--tap) + var(--space-4));
+  border-radius: var(--radius);
+}
+
+@keyframes nfc-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfc-skeleton__line,
+  .nfc-skeleton__button,
+  .nfc-panel-skeleton__row {
+    animation: none;
+  }
+}
+
+/* ---------- Notices: quiet, not errors ---------- */
+
+.nfc-notice {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+.nfc-notice--full {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.nfc-notice__body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.nfc-notice__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+}
+
+.nfc-notice__text {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.nfc-notice__retry {
+  width: 100%;
+  min-height: calc(var(--tap) + var(--space-5));
+}
+
+.nfc-notice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+.nfc-notice__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--accent);
+}
+
+@media (hover: hover) {
+  .nfc-notice__link:hover {
+    color: var(--accent-hover);
+  }
+}
+
+@media (forced-colors: active) {
+  .nfc-skeleton__line,
+  .nfc-skeleton__button,
+  .nfc-panel-skeleton__row {
+    border: var(--hairline) solid CanvasText;
+  }
+}

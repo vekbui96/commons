@@ -16,6 +16,13 @@ if (isPrivateSite()) document.title = "Commons (private)";
 // Outside React, so StrictMode never starts it twice.
 startTabBackgrounds();
 
+// Public NFC tag links (#/t/<id>?k=<key>): strip the key from the address bar
+// and start loading the runner before React boots. Build-time literals: the
+// import is gone from builds without a gateway and from the private build.
+if (import.meta.env.COMMONS_TARGET === "public" && import.meta.env.VITE_NFC_GATEWAY) {
+  void import("./shell/nfc/early").then((m) => m.startNfcEarly());
+}
+
 // Hash routing so deep links (#/apps/units) work on GitHub Pages without a
 // server-side fallback.
 createRoot(document.getElementById("root")!).render(

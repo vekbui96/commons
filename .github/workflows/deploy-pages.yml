@@ -38,8 +38,15 @@ jobs:
           VITE_COMMONS_API: ${{ vars.COMMONS_API || '' }}
           # Pages is always the public build: private apps are cut from the bundle.
           COMMONS_TARGET: public
+          # Public NFC tags (#/t/<id>?k=): the gateway base and the static backup
+          # copy (repo variables, docs/nfc-controls-contract.md). Unset = no route.
+          VITE_NFC_GATEWAY: ${{ vars.NFC_GATEWAY || '' }}
+          VITE_NFC_FALLBACK: ${{ vars.NFC_FALLBACK || '' }}
       - name: Check no private app reached the public build
         run: node scripts/check-dist.mjs public
+        env:
+          # The one tailnet-named origin allowed in the public bundle (exact match).
+          VITE_NFC_GATEWAY: ${{ vars.NFC_GATEWAY || '' }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
